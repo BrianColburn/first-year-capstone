@@ -1,8 +1,11 @@
 \documentclass{article}
-\usepackage{titling, lipsum}
+\usepackage{titling}
+
+\usepackage[style=numeric, backend=bibtex]{biblatex}
+\addbibresource{logicians-spec.bib}
 
 \title{Requirements Specification Document}
-\author{Rita Sperry, Blah Blah, Blah Blah, Blah Blah, Blah de Blah}	
+\author{Brandon Garcia, Brian Colburn, David Castillo, Mark Thompson, Xavier Linares}	
 \date{March 2020}
 
 \begin{document}
@@ -12,19 +15,22 @@
 \maketitle
 \end{titlingpage}
 
+\tableofcontents
+\pagebreak
+
 \section{Project Overview and Objectives}
 \subsection{Project Overview}
-Here is where I will write a brief overview about my client (who they are, what they do, etc), as well as what they would like for my team to do in the project in general terms.
+Dr. Tedrow has tasked us with creating a "truth-table generator". The program is a terminal application which reads in logical statements and outputs to the user's choice of a plain-text or HTML file. The program should be written in C++ and will be used for logic/discrete math classes.
 
 
 \subsection{Project Objectives}
 
-In sentence or bullet form, highlight the primary objectives/goals of the project based on your understanding of what the client wants you to accomplish.
-\begin{itemize}
- \item blah
- \item blah
- \item blah
-\end{itemize}
+Our objectives are as follows (in order of decreasing priority):
+\begin{enumerate}
+ \item Generate truth-tables
+ \item Perform transformations upon statements
+ \tiny \item An animated splash screen
+\end{enumerate}
 
 
 \section{Structured Requirements}
@@ -33,16 +39,29 @@ In outline form, demonstrate the major requirements for this project. It might b
 
 \subsection{Requirement 1}
 \subsubsection{Requirement 1.1}
-Describe Requirement 1.1 here!
+The program must be able to parse logical statements, instantiate variables with either True or False, and evaluate the following operations:
+\begin{itemize}
+	\item Negation\\
+		Written as ``$\sim$p".
+	\item Conjunction\\
+		Written as ``p AND q",\\
+		``p \^{} q", or\\
+		``p \& q".
+	\item (Inclusive) Disjuction\\
+		Written as ``p OR q",\\
+		``p v q",\\
+		``p V q", or\\
+		``p \&\& q".
+	\item Material Implication\\
+		Written as ``p -$\rangle $ q".
+	\item Material Equivalence\\
+		Written as ``p $\langle-\rangle$ q", or\\
+		``p IFF q".
+\end{itemize}
+Variables are defined as a letter that is not `v' (due to `v' denoting disjunction) \cite{hawthorne}.
 \subsubsection{Requirement 1.2}
 Describe Requirement 1.2 here!
 
-\section{Bibliography}
-
-Britt, S. B. (1978). A title is written in sentence caps. \textit{Journal Title with Main Words Capitalized, 4}(2), p. 123-456.
-
-\vspace{1em}
-
-Sperry, R. A. (2020). The title of my article. \textit{Fancy Journal Title Here, 1}(2), p. 42-4337.
+\printbibliography
 
 \end{document}
