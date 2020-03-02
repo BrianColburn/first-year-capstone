@@ -4,8 +4,8 @@
 \usepackage[style=numeric, backend=bibtex]{biblatex}
 \addbibresource{logicians-spec.bib}
 
-\title{Requirements Specification Document}
-\author{Brandon Garcia, Brian Colburn, David Castillo, Mark Thompson, Xavier Linares}	
+\title{The Logicians' Truth--Table Generator}
+\author{\textbf{The Logicians}\\Brandon Garcia, Brian Colburn,\\ David Castillo, Mark Thompson, Xavier Linares}	
 \date{March 2020}
 
 \begin{document}
@@ -58,9 +58,15 @@ The program must be able to parse logical statements, instantiate variables with
 		Written as ``p $\langle-\rangle$ q", or\\
 		``p IFF q".
 \end{itemize}
-Variables are defined as a letter that is not `v' (due to `v' denoting disjunction) \cite{hawthorne}.
+Variables are defined as a letter that is not `v' (due to `v' denoting disjunction).
+
 \subsubsection{Requirement 1.2}
-Describe Requirement 1.2 here!
+Iff time allows for development, the program will be able to apply the following transformations:
+\begin{itemize}
+	\item De Morgan's Laws\\
+	$\sim (p \land q) \to \sim p \lor \sim q$\\
+	$\sim (p \lor q) \to \sim p \land \sim q$
+\end{itemize}
 
 \printbibliography
 
