@@ -2,6 +2,8 @@
 #include <cctype>
 #include <iostream>
 
+bool is_valid_statement(const std::string& stm, int start, int end);
+
 /**
  * Given a string and an index of a '(' to start from, return the
  *   length of the substring up to the matching ')'.
@@ -27,6 +29,7 @@ int find_close_paren(const std::string& str, int ix) {
         return length;
     } else {
         acc++;
+        ix++;
         while (acc) {
             length++;
 
@@ -35,8 +38,48 @@ int find_close_paren(const std::string& str, int ix) {
             } else if (str[ix] == ')') {
                 acc--;
             }
-
             ix++;
+        }
+        return length;
+    }
+}
+
+/**
+ * Given a string and an index of a ')' to start from, return the
+ *   length of the substring up to the matching '('.
+ * 
+ * ie:
+ * find_open_paren("()", 1) -> 0
+ * find_open_paren("(a)", 2) -> 1
+ * find_open_paren("(a)", 1) -> -1
+ * find_open_paren("f(x+1)", 5) -> 3
+ * find_open_paren("x+1", 0) -> -1
+ * 
+ * Complexity
+ * -----------
+ * Time: O(str.size())
+ *   Since, in the worst case scenario, we are given "(c1, c2, ..., cn)".
+ * Space: O(1)
+ *   We only need 12 bytes for the ints because str is const&.
+ */
+int find_open_paren(const std::string& str, int ix) {
+    int acc = 0,
+        length = -1;
+    if (ix < 0 || ix >= str.size() || str[ix] != ')') {
+        return length;
+    } else {
+        acc++;
+        ix--;
+        while (acc) {
+            length++;
+
+            if (str[ix] == ')') {
+                acc++;
+            } else if (str[ix] == '(') {
+                acc--;
+            }
+
+            ix--;
         }
         return length;
     }
@@ -103,6 +146,74 @@ bool is_valid_not(const std::string& stm, int ix) {
 }
 
 /**
+ * The conjunction operation is denoted with "AND", "^", and "&".
+ * The operator must have variables or sub-expressions on both sides.
+ *   (ie: "p^q" or "pAND(q)")
+ * 
+ * Complexity
+ * -----------
+ * Time: O(stm.size())
+ *   Since we may need to traverse the entire string.
+ * Space: O(1)
+ *   Since `stm' is const&.
+ */
+bool is_valid_and(const std::string& stm, int ix) {
+    bool is_valid = stm[ix] == '^'
+                 || stm[ix] == '&' && stm[ix+1] != '&'
+                 || stm.substr(ix,ix+3).compare("AND") == 0; // Note: substr is O(n), but n is capped at 3.
+    int length = stm[ix] != 'A' ? 1 : 3;
+
+    if (is_valid) {
+        if (stm[ix-1] == ')') {
+            is_valid_statement(stm, ix-1-find_open_paren(stm, ix-1), ix-2);
+        } else if (!is_valid_var(stm[ix-1])) {
+            is_valid = false;
+        }
+
+        if (stm[ix+length] == '(') {
+            is_valid_statement(stm, ix+length+1, find_close_paren(stm, ix+length));
+        } else if (!is_valid_var(stm[ix+length])) {
+            is_valid = false;
+        }
+    }
+    return is_valid;
+}
+
+/**
+ * The disjunction operation is denoted with "OR", "v", "V", and "&&".
+ * The operator must have variables or sub-expressions on both sides.
+ *   (ie: "pvq" or "pOR(q)")
+ * 
+ * Complexity
+ * -----------
+ * Time: O(stm.size())
+ *   Since we may need to traverse the entire string.
+ * Space: O(1)
+ *   Since `stm' is const&.
+ */
+bool is_valid_or(const std::string& stm, int ix) {
+    bool is_valid = tolower(stm[ix]) == 'v'
+                 || stm[ix] == '&' && stm[ix+1] == '&'
+                 || stm[ix] == 'O' && stm[ix+1] == 'R';
+    int length = tolower(stm[ix]) != 'v' ? 2 : 1;
+
+    if (is_valid) {
+        if (stm[ix-1] == ')') {
+            is_valid_statement(stm, ix-1-find_open_paren(stm, ix-1), ix-2);
+        } else if (!is_valid_var(stm[ix-1])) {
+            is_valid = false;
+        }
+
+        if (stm[ix+length] == '(') {
+            is_valid_statement(stm, ix+length+1, find_close_paren(stm, ix+length));
+        } else if (!is_valid_var(stm[ix+length])) {
+            is_valid = false;
+        }
+    }
+    return is_valid;
+}
+
+/**
  * A statement is valid if all operators/operands are valid.
  * 
  * Complexity
@@ -124,10 +235,33 @@ bool is_valid_statement(const std::string& stm, int start, int end) {
             case '~': {
                 if (!is_valid_not(stm, i)) {
                     is_valid = false;
-                    std::cout << "Encountered invalid not at position " << i << std::endl
+                    std::cout << "Encountered invalid NOT at position " << i << std::endl
                               << "    " << stm.substr(i,i+3) << "...\n";
                 }
                 break;
+            }
+            case 'A': case '^': {
+                if (!is_valid_and(stm, i)) {
+                    is_valid = false;
+                    std::cout << "Encountered invalid AND at position " << i << std::endl
+                              << "    " << stm.substr(i,i+3) << "...\n";
+                }
+                break;
+            }
+            case 'V': case 'v': case 'O': {
+                if (!is_valid_or(stm, i)) {
+                    is_valid = false;
+                    std::cout << "Encountered invalid OR at position " << i << std::endl
+                              << "    " << stm.substr(i,i+3) << "...\n";
+                }
+                break;
+            }
+            case '&': {
+                is_valid = is_valid_and(stm,i) || is_valid_or(stm,i);
+                break;
+            }
+            default: {
+                is_valid = is_valid_var(stm[i]);
             }
         }
     }
