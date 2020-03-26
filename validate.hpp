@@ -2,10 +2,10 @@
 #include <cctype>
 #include <iostream>
 
-#ifdef DEBUG
-  #define DEBUG_IF(x) if(x)
+#ifdef DEBUG_VALIDATE
+  #define IF_DEBUG_VALIDATE(x) x
 #else
-  #define DEBUG_IF(x) if(false)
+  #define IF_DEBUG_VALIDATE(x)
 #endif
 
 int is_valid_statement(const std::string& stm, int start, int end);
@@ -145,7 +145,7 @@ int is_valid_var(const char& c) {
  *   We only need 4 bytes for `ix' since `stm' is const&.
  */
 int is_valid_not(const std::string& stm, int ix) {
-    std::cout << "Entered `is_valid_not\n";
+    IF_DEBUG_VALIDATE(std::cout << "Entered `is_valid_not\n");
     int length = 0;
     if (stm[ix] == '~') { // We are at a '~'
         length++;
@@ -154,19 +154,18 @@ int is_valid_not(const std::string& stm, int ix) {
         if (length == 1 && stm[ix+1] == '(') {
             int start = ix + 1 + length;
             int end = start + find_close_paren(stm, ix+1);
-            std::cout << "(isn) Checking sub expression\n";
+            IF_DEBUG_VALIDATE(std::cout << "(isn) Checking sub expression\n");
             int tmp = is_valid_statement(stm, start, end);
-            std::cout << "(isn) result of subexpression: " << tmp << std::endl;
+            IF_DEBUG_VALIDATE(std::cout << "(isn) result of subexpression: " << tmp << std::endl);
             length += tmp+2;
-            std::cout << "NOT length: " << length << std::endl;
+            IF_DEBUG_VALIDATE(std::cout << "NOT length: " << length << std::endl);
         }
-        std::cout << "(isn) between if's with length = " << length << std::endl;
         if (length == 1) {
-            std::cout << "Exited `is_valid_not' with value " << length << std::endl;
+            IF_DEBUG_VALIDATE(std::cout << "Exited `is_valid_not' with value " << length << std::endl);
             return 0;
         }
     }
-    std::cout << "Exited `is_valid_not' with value " << length << std::endl;
+    IF_DEBUG_VALIDATE(std::cout << "Exited `is_valid_not' with value " << length << std::endl);
     return length;
 }
 
@@ -185,7 +184,7 @@ int is_valid_not(const std::string& stm, int ix) {
  *   Since `stm' is const&.
  */
 int is_valid_and(const std::string& stm, int ix) {
-    std::cout << "Entered `is_valid_and\n";
+    IF_DEBUG_VALIDATE(std::cout << "Entered `is_valid_and\n");
     bool is_valid = stm[ix] == '^'
                  || stm[ix] == '&' && stm[ix+1] != '&'
                  || stm[ix] == 'A' && stm[ix+1] == 'N' && stm[ix+2] == 'D';
@@ -207,11 +206,11 @@ int is_valid_and(const std::string& stm, int ix) {
         if (stm[ix+length] == '(') {
             int start = ix + length+1;
             int end = start + find_close_paren(stm, ix+length);
-            std::cout << "(iva) Checking from " << start << " to " << end << std::endl;
-            std::cout << "(iva) (\"" << stm.substr(start, end-start) << "\")\n";
+            IF_DEBUG_VALIDATE(std::cout << "(iva) Checking from " << start << " to " << end << std::endl);
+            IF_DEBUG_VALIDATE(std::cout << "(iva) (\"" << stm.substr(start, end-start) << "\")\n");
 
             int tmp = is_valid_statement(stm, start, end);
-            std::cout << "(iva) ivs results: " << tmp << std::endl;
+            IF_DEBUG_VALIDATE(std::cout << "(iva) ivs results: " << tmp << std::endl);
             if (tmp > 0) length += tmp + 2;
             else is_valid &= false;
         } else if (stm[ix+length] == '~') {
@@ -222,7 +221,7 @@ int is_valid_and(const std::string& stm, int ix) {
             is_valid = false;
         }
     }
-    std::cout << "Exited `is_valid_and\n";
+    IF_DEBUG_VALIDATE(std::cout << "Exited `is_valid_and\n");
     return is_valid ? length : 0;
 }
 
@@ -241,7 +240,7 @@ int is_valid_and(const std::string& stm, int ix) {
  *   Since `stm' is const&.
  */
 int is_valid_or(const std::string& stm, int ix) {
-    std::cout << "Entered `is_valid_or\n";
+    IF_DEBUG_VALIDATE(std::cout << "Entered `is_valid_or\n");
     bool is_valid = tolower(stm[ix]) == 'v'
                  || stm[ix] == '&' && stm[ix+1] == '&'
                  || stm[ix] == 'O' && stm[ix+1] == 'R';
@@ -259,30 +258,30 @@ int is_valid_or(const std::string& stm, int ix) {
         if (stm[ix+length] == '(') {
             int start = ix + length+1;
             int end = start + find_close_paren(stm, ix+length);
-            std::cout << "(ivo) Checking from " << start << " to " << end << std::endl;
-            std::cout << "(ivo) (\"" << stm.substr(start, end-start) << "\")\n";
+            IF_DEBUG_VALIDATE(std::cout << "(ivo) Checking from " << start << " to " << end << std::endl);
+            IF_DEBUG_VALIDATE(std::cout << "(ivo) (\"" << stm.substr(start, end-start) << "\")\n");
 
             int tmp = is_valid_statement(stm, start, end);
-            std::cout << "(ivo) ivs results: " << tmp << std::endl;
+            IF_DEBUG_VALIDATE(std::cout << "(ivo) ivs results: " << tmp << std::endl);
             if (tmp > 0) length += tmp + 2;
             else is_valid &= false;
         } else if (stm[ix+length] == '~') {
-            std::cout << "(ivo) Checking NOT\n";
+            IF_DEBUG_VALIDATE(std::cout << "(ivo) Checking NOT\n");
             int tmp = is_valid_not(stm, ix+length);
             if (tmp > 0) length += tmp;
             else is_valid &= false;
         } else if (!is_valid_var(stm[ix+length])) {
-            std::cout << "(ivo) Right operand is not a variable\n";
+            IF_DEBUG_VALIDATE(std::cout << "(ivo) Right operand is not a variable\n");
             is_valid = false;
         }
     }
-    std::cout << "OR at position " << ix << " found " << (is_valid ? "valid" : "invalid") << std::endl;
-    std::cout << "Exited `is_valid_or\n";
+    IF_DEBUG_VALIDATE(std::cout << "OR at position " << ix << " found " << (is_valid ? "valid" : "invalid") << std::endl);
+    IF_DEBUG_VALIDATE(std::cout << "Exited `is_valid_or\n");
     return is_valid ? length : 0;
 }
 
 int is_valid_implication(const std::string& stm, int ix) {
-    std::cout << "Entered `is_valid_implication\n";
+    IF_DEBUG_VALIDATE(std::cout << "Entered `is_valid_implication\n");
     bool is_valid = stm[ix] == '-' && stm[ix+1] == '>';
     int length = 2;
 
@@ -290,30 +289,30 @@ int is_valid_implication(const std::string& stm, int ix) {
         if (stm[ix+length] == '(') {
             int start = ix + length+1;
             int end = start + find_close_paren(stm, ix+length);
-            std::cout << "(ivi) Checking from " << start << " to " << end << std::endl;
-            std::cout << "(ivi) (\"" << stm.substr(start, end-start) << "\")\n";
+            IF_DEBUG_VALIDATE(std::cout << "(ivi) Checking from " << start << " to " << end << std::endl);
+            IF_DEBUG_VALIDATE(std::cout << "(ivi) (\"" << stm.substr(start, end-start) << "\")\n");
 
             int tmp = is_valid_statement(stm, start, end);
-            std::cout << "(ivi) ivs results: " << tmp << std::endl;
+            IF_DEBUG_VALIDATE(std::cout << "(ivi) ivs results: " << tmp << std::endl);
             if (tmp > 0) length += tmp + 2;
             else is_valid &= false;
         } else if (stm[ix+length] == '~') {
-            std::cout << "(ivi) Checking NOT\n";
+            IF_DEBUG_VALIDATE(std::cout << "(ivi) Checking NOT\n");
             int tmp = is_valid_not(stm, ix+length);
             if (tmp > 0) length += tmp;
             else is_valid &= false;
         } else if (!is_valid_var(stm[ix+length])) {
-            std::cout << "(ivi) Right operand is not a variable\n";
+            IF_DEBUG_VALIDATE(std::cout << "(ivi) Right operand is not a variable\n");
             is_valid = false;
         }
     }
-    std::cout << "IMPLICATION at position " << ix << " found " << (is_valid ? "valid" : "invalid") << std::endl;
-    std::cout << "Exited `is_valid_implication\n";
+    IF_DEBUG_VALIDATE(std::cout << "IMPLICATION at position " << ix << " found " << (is_valid ? "valid" : "invalid") << std::endl);
+    IF_DEBUG_VALIDATE(std::cout << "Exited `is_valid_implication\n");
     return is_valid ? length : 0;
 }
 
 int is_valid_equivalence(const std::string& stm, int ix) {
-    std::cout << "Entered `is_valid_equivalence\n";
+    IF_DEBUG_VALIDATE(std::cout << "Entered `is_valid_equivalence\n");
     bool is_valid = stm[ix] == '<' && stm[ix+1] == '-' && stm[ix+2] == '>'
                  || stm[ix] == 'I' && stm[ix+1] == 'F' && stm[ix+2] == 'F';
     int length = 3;
@@ -322,25 +321,25 @@ int is_valid_equivalence(const std::string& stm, int ix) {
         if (stm[ix+length] == '(') {
             int start = ix + length+1;
             int end = start + find_close_paren(stm, ix+length);
-            std::cout << "(ive) Checking from " << start << " to " << end << std::endl;
-            std::cout << "(ive) (\"" << stm.substr(start, end-start) << "\")\n";
+            IF_DEBUG_VALIDATE(std::cout << "(ive) Checking from " << start << " to " << end << std::endl);
+            IF_DEBUG_VALIDATE(std::cout << "(ive) (\"" << stm.substr(start, end-start) << "\")\n");
 
             int tmp = is_valid_statement(stm, start, end);
-            std::cout << "(ive) ivs results: " << tmp << std::endl;
+            IF_DEBUG_VALIDATE(std::cout << "(ive) ivs results: " << tmp << std::endl);
             if (tmp > 0) length += tmp + 2;
             else is_valid &= false;
         } else if (stm[ix+length] == '~') {
-            std::cout << "(ive) Checking NOT\n";
+            IF_DEBUG_VALIDATE(std::cout << "(ive) Checking NOT\n");
             int tmp = is_valid_not(stm, ix+length);
             if (tmp > 0) length += tmp;
             else is_valid &= false;
         } else if (!is_valid_var(stm[ix+length])) {
-            std::cout << "(ive) Right operand is not a variable\n";
+            IF_DEBUG_VALIDATE(std::cout << "(ive) Right operand is not a variable\n");
             is_valid = false;
         }
     }
-    std::cout << "IFF at position " << ix << " found " << (is_valid ? "valid" : "invalid") << std::endl;
-    std::cout << "Exited `is_valid_equivalence\n";
+    IF_DEBUG_VALIDATE(std::cout << "IFF at position " << ix << " found " << (is_valid ? "valid" : "invalid") << std::endl);
+    IF_DEBUG_VALIDATE(std::cout << "Exited `is_valid_equivalence\n");
     return is_valid ? length : 0;
 }
 
@@ -381,11 +380,11 @@ int is_valid_statement(const std::string& stm) {
 }
 
 int is_valid_statement(const std::string& stm, const int start, const int end) {
-    std::cout << "Entered `is_valid_statement\n";
-    std::cout << "Testing statement \"" << stm.substr(start, end-start) << "\"\n";
+    IF_DEBUG_VALIDATE(std::cout << "Entered `is_valid_statement\n");
+    IF_DEBUG_VALIDATE(std::cout << "Testing statement \"" << stm.substr(start, end-start) << "\"\n");
     bool is_valid = true; // Give it the benefit of the doubt.
 
-    std::cout << start << ", " << end << ", " << end-start << "/" << stm.size() << std::endl;
+    IF_DEBUG_VALIDATE(std::cout << start << ", " << end << ", " << end-start << "/" << stm.size() << std::endl);
 
     is_valid = 0 <= start
             && start < end
@@ -403,11 +402,11 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
     }
 
     for (int i = start; i < end; i++) {
-        std::cout << "Checking \"" << stm.substr(i,end-i) << "\"\n";
+        IF_DEBUG_VALIDATE(std::cout << "Checking \"" << stm.substr(i,end-i) << "\"\n");
         switch (stm[i]) {
             case '(': {
                 int close_paren = find_close_paren(stm, i);
-                std::cout << "Encountered sub-expression \"" << stm.substr(i+1,close_paren) << "\"\n";
+                IF_DEBUG_VALIDATE(std::cout << "Encountered sub-expression \"" << stm.substr(i+1,close_paren) << "\"\n");
                 int tmp = is_valid_statement(stm, i+1, i+1+close_paren);
                 if (tmp > 0)
                     i += tmp+2-1;
@@ -416,19 +415,19 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
             }
             case ')': {
                 is_valid &= false;
-                std::cout << "Encountered ')' at position " << i << std::endl;
+                std::cout << "Encountered unexpected ')' at position " << i << std::endl;
                 break;
             }
             case '~': {
                 int tmp = is_valid_not(stm, i);
-                std::cout << "Result of NOT: " << tmp << std::endl;
+                IF_DEBUG_VALIDATE(std::cout << "Result of NOT: " << tmp << std::endl);
                 if (!tmp) {
                     is_valid &= false;
                     std::cout << "Encountered invalid NOT at position " << i << std::endl
                               << "    " << stm.substr(i,i+3) << "...\n";
                 } else {
-                    std::cout << "Skipping " << tmp << " \"" << stm.substr(i,i+tmp) << "\"\n";
-                    std::cout << stm[i+tmp] << std::endl;
+                    IF_DEBUG_VALIDATE(std::cout << "Skipping " << tmp << " \"" << stm.substr(i,i+tmp) << "\"\n");
+                    IF_DEBUG_VALIDATE(std::cout << stm[i+tmp] << std::endl);
                     i += tmp-1;
                 }
                 break;
@@ -440,8 +439,8 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
                     std::cout << "Encountered invalid AND at position " << i << std::endl
                               << "    " << stm.substr(i,i+3) << "...\n";
                 } else {
-                    std::cout << "Skipping " << tmp << " \"" << stm.substr(i,i+tmp) << "\"\n";
-                    std::cout << stm[i+tmp] << std::endl;
+                    IF_DEBUG_VALIDATE(std::cout << "Skipping " << tmp << " \"" << stm.substr(i,i+tmp) << "\"\n");
+                    IF_DEBUG_VALIDATE(std::cout << stm[i+tmp] << std::endl);
                     i += tmp-1;
                 }
                 break;
@@ -453,8 +452,8 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
                     std::cout << "Encountered invalid OR at position " << i << std::endl
                               << "    " << stm.substr(i,i+3) << "...\n";
                 } else {
-                    std::cout << "Skipping " << tmp << " \"" << stm.substr(i,i+tmp) << "\"\n";
-                    std::cout << stm[i+tmp] << std::endl;
+                    IF_DEBUG_VALIDATE(std::cout << "Skipping " << tmp << " \"" << stm.substr(i,i+tmp) << "\"\n");
+                    IF_DEBUG_VALIDATE(std::cout << stm[i+tmp] << std::endl);
                     i += tmp-1;
                 }
                 break;
@@ -470,8 +469,8 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
                     std::cout << "Encountered invalid IMPLICATION at position " << i << std::endl
                               << "    " << stm.substr(i,i+3) << "...\n";
                 } else {
-                    std::cout << "Skipping " << tmp << " \"" << stm.substr(i,i+tmp) << "\"\n";
-                    std::cout << stm[i+tmp] << std::endl;
+                    IF_DEBUG_VALIDATE(std::cout << "Skipping " << tmp << " \"" << stm.substr(i,i+tmp) << "\"\n");
+                    IF_DEBUG_VALIDATE(std::cout << stm[i+tmp] << std::endl);
                     i += tmp-1;
                 }
                 break;
@@ -483,8 +482,8 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
                     std::cout << "Encountered invalid IFF at position " << i << std::endl
                               << "    " << stm.substr(i,i+3) << "...\n";
                 } else {
-                    std::cout << "Skipping " << tmp << " \"" << stm.substr(i,i+tmp) << "\"\n";
-                    std::cout << stm[i+tmp] << std::endl;
+                    IF_DEBUG_VALIDATE(std::cout << "Skipping " << tmp << " \"" << stm.substr(i,i+tmp) << "\"\n");
+                    IF_DEBUG_VALIDATE(std::cout << stm[i+tmp] << std::endl);
                     i += tmp-1;
                 }
                 break;
@@ -499,8 +498,8 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
         }
     }
 
-    std::cout << "\"" << stm.substr(start, end-start) << "\" was found " << (is_valid ? "valid" : "invalid") << std::endl;
-    std::cout << "Exited `is_valid_statement\n";
+    IF_DEBUG_VALIDATE(std::cout << "\"" << stm.substr(start, end-start) << "\" was found " << (is_valid ? "valid" : "invalid") << std::endl);
+    IF_DEBUG_VALIDATE(std::cout << "Exited `is_valid_statement\n");
 
     return is_valid ? end-start : 0;
 }
