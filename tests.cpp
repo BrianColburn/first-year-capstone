@@ -2,7 +2,7 @@
 
 std::string test_valid_stm(std::string stm) {
     std::cout << "Testing statement \"" << stm << "\"\n";
-    if (is_valid_statement(stm))
+    if (is_valid_statement(stm) > 0)
         return stm + " is a valid statement\n";
     else
         return stm + " is NOT a valid statement\n";
@@ -43,9 +43,21 @@ int main(int argc, char const *argv[])
     std::cout << test_valid_stm(stm) << std::endl;
     stm = "()";
     std::cout << test_valid_stm(stm) << std::endl;
-    stm = "~(p)";
+    stm = "~~(~~~p)";
     std::cout << test_valid_stm(stm) << std::endl;
-    stm = "pORqV(r->s^p<->r->~(~p&&(~(s))))AND(pORqIFFqVp)&((r))";
+    stm = "pORqV(r->s^p<->r->~(~p&&(~(s))))AND(pORqIFFqVp)&((~~r))";
+    std::cout << test_valid_stm(stm) << std::endl;
+    stm = "(a)";
+    std::cout << test_valid_stm(stm) << std::endl;
+    stm = "(a)b";
+    std::cout << test_valid_stm(stm) << std::endl;
+    stm = "eeee";
+    std::cout << test_valid_stm(stm) << std::endl;
+    stm = "<->(->(OR(AND(~b))))";
+    std::cout << test_valid_stm(stm) << std::endl;
+    stm = "e";
+    std::cout << test_valid_stm(stm) << std::endl;
+    stm = "(abcd)v(efgh)&i";
     std::cout << test_valid_stm(stm) << std::endl;
     return 0;
 }
