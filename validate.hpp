@@ -1,3 +1,4 @@
+#pragma once
 // TODO: Update complexities
 
 #include <string>
@@ -9,6 +10,13 @@
 #else
   #define IF_DEBUG_VALIDATE(x)
 #endif
+
+void display_err(std::string err, const std::string& stm, int ix) {
+    std::cout << "Encountered " << err << " at position " << ix << std::endl;
+    std::cout << stm << std::endl;
+    for (int i = 0; i < ix; i++) std::cout << ' ';
+    std::cout << '^' << std::endl;
+}
 
 int is_valid_statement(const std::string& stm, int start, int end);
 
@@ -146,6 +154,7 @@ int is_valid_var(const char& c) {
  *   Since we might need to traverse the entire string.
  * Space: O(1)
  *   We only need 4 bytes for `ix' since `stm' is const&.
+ * TODO: Space is likely wrong, since `is_valid_statement' could be called
  */
 int is_valid_not(const std::string& stm, int ix) {
     IF_DEBUG_VALIDATE(std::cout << "Entered `is_valid_not\n");
@@ -170,13 +179,14 @@ int is_valid_not(const std::string& stm, int ix) {
             length = tmp > 0 ? tmp + length : tmp - length;
             IF_DEBUG_VALIDATE(std::cout << "NOT length: " << length << std::endl);
         } else if (stm[ix+length] == '~') { //   or another negation.
-            int tmp = is_valid_not(stm, ix+1);
+            int tmp = is_valid_not(stm, ix+1); // This could probably be written as a loop.
+                                               // Left as is for now since we don't care
+                                               //   *that* much about performance.
             length = tmp > 0 ? tmp + length : tmp - length;
         } else {
-            std::cout << "Encountered unexpected character at position " << ix+length << std::endl
-                      << "    " << stm.substr(ix+length,ix+length+3) << "...\n";
-            std::cout << "Expected /[a-uw-z]/, '(', or '~'\n";
-            std::cout << "Found '" << stm[ix+length] << "'\n";
+            display_err("unexpected character", stm, ix);
+            std::cout << "    Expected /[a-uw-z]/, '(', or '~'\n";
+            std::cout << "    Found '" << stm[ix+length] << "'\n";
             length = -length;
         }
     }
@@ -195,6 +205,7 @@ int is_valid_not(const std::string& stm, int ix) {
  *   Since we may need to traverse the entire string.
  * Space: O(1)
  *   Since `stm' is const&.
+ * TODO: Space is likely wrong, since `is_valid_statement' could be called
  */
 int is_valid_and(const std::string& stm, int ix) {
     IF_DEBUG_VALIDATE(std::cout << "Entered `is_valid_and', " << stm.substr(ix) << " " << ix << "\n");
@@ -224,10 +235,9 @@ int is_valid_and(const std::string& stm, int ix) {
             length = tmp > 0 ? tmp + length : tmp - length;
             is_valid &= length > 0;
         } else {
-            std::cout << "Encountered unexpected character at position " << ix+length << std::endl
-                      << "    " << stm.substr(ix+length,ix+length+3) << "...\n";
-            std::cout << "Expected /[a-uw-z]/, '(', or '~'\n";
-            std::cout << "Found '" << stm[ix+length] << "'\n";
+            display_err("unexpected character", stm, ix);
+            std::cout << "    Expected /[a-uw-z]/, '(', or '~'\n";
+            std::cout << "    Found '" << stm[ix+length] << "'\n";
             length = -length;
         }
     } else {
@@ -248,6 +258,7 @@ int is_valid_and(const std::string& stm, int ix) {
  *   Since we may need to traverse the entire string.
  * Space: O(1)
  *   Since `stm' is const&.
+ * TODO: Space is likely wrong, since `is_valid_statement' could be called
  */
 int is_valid_or(const std::string& stm, int ix) {
     IF_DEBUG_VALIDATE(std::cout << "Entered `is_valid_or\n");
@@ -278,10 +289,9 @@ int is_valid_or(const std::string& stm, int ix) {
             length = tmp > 0 ? tmp + length : tmp - length;
             is_valid &= length > 0;
         } else {
-            std::cout << "Encountered unexpected character at position " << ix+length << std::endl
-                      << "    " << stm.substr(ix+length,ix+length+3) << "...\n";
-            std::cout << "Expected /[a-uw-z]/, '(', or '~'\n";
-            std::cout << "Found '" << stm[ix+length] << "'\n";
+            display_err("unexpected character", stm, ix);
+            std::cout << "    Expected /[a-uw-z]/, '(', or '~'\n";
+            std::cout << "    Found '" << stm[ix+length] << "'\n";
             length = -length;
         }
     } else {
@@ -319,10 +329,9 @@ int is_valid_implication(const std::string& stm, int ix) {
             length = tmp > 0 ? tmp + length : tmp - length;
             is_valid &= length > 0;
         } else {
-            std::cout << "Encountered unexpected character at position " << ix+length << std::endl
-                      << "    " << stm.substr(ix+length,ix+length+3) << "...\n";
-            std::cout << "Expected /[a-uw-z]/, '(', or '~'\n";
-            std::cout << "Found '" << stm[ix+length] << "'\n";
+            display_err("unexpected character", stm, ix);
+            std::cout << "    Expected /[a-uw-z]/, '(', or '~'\n";
+            std::cout << "    Found '" << stm[ix+length] << "'\n";
             length = -length;
         }
     } else {
@@ -330,7 +339,7 @@ int is_valid_implication(const std::string& stm, int ix) {
     }
     IF_DEBUG_VALIDATE(std::cout << "IMPLICATION at position " << ix << " found " << (is_valid ? "valid" : "invalid") << std::endl);
     IF_DEBUG_VALIDATE(std::cout << "Exited `is_valid_implication\n");
-    return is_valid ? length : 0;
+    return length;
 }
 
 int is_valid_equivalence(const std::string& stm, int ix) {
@@ -361,10 +370,9 @@ int is_valid_equivalence(const std::string& stm, int ix) {
             length = tmp > 0 ? tmp + length : tmp - length;
             is_valid &= length > 0;
         } else {
-            std::cout << "Encountered unexpected character at position " << ix+length << std::endl
-                      << "    " << stm.substr(ix+length,ix+length+3) << "...\n";
-            std::cout << "Expected /[a-uw-z]/, '(', or '~'\n";
-            std::cout << "Found '" << stm[ix+length] << "'\n";
+            display_err("unexpected character", stm, ix);
+            std::cout << "    Expected /[a-uw-z]/, '(', or '~'\n";
+            std::cout << "    Found '" << stm[ix+length] << "'\n";
             length = -length;
         }
     } else {
@@ -377,6 +385,7 @@ int is_valid_equivalence(const std::string& stm, int ix) {
 
 enum ExprType {OPERAND, OPERATOR};
 
+IF_DEBUG_VALIDATE(int cnt;)
 /**
  * A statement is valid if all operators/operands are valid.
  * 
@@ -410,7 +419,10 @@ enum ExprType {OPERAND, OPERATOR};
  *   Because all other `is_valid_*' functions are O(1).
  */
 int is_valid_statement(const std::string& stm) {
-    return is_valid_statement(stm, 0, stm.size());
+    IF_DEBUG_VALIDATE(cnt = 0;)
+    int result = is_valid_statement(stm, 0, stm.size());
+    IF_DEBUG_VALIDATE(std::cout << "Looped " << cnt << " times\n";)
+    return result;
 }
 
 int is_valid_statement(const std::string& stm, const int start, const int end) {
@@ -438,7 +450,8 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
     ExprType expecting = OPERAND;
 
     for (int i = start; i < end; i++) {
-        IF_DEBUG_VALIDATE(std::cout << "Checking \"" << stm.substr(i,end-i) << "\"\n");
+        IF_DEBUG_VALIDATE(cnt++;)
+        IF_DEBUG_VALIDATE(std::cout << "Loop " << cnt << ": \"" << stm.substr(i, end-i) << "\"\n";)
         switch (stm[i]) {
             case '(': {
                 is_valid &= expecting == OPERAND;
@@ -453,7 +466,7 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
             }
             case ')': {
                 is_valid &= false;
-                std::cout << "Encountered unexpected ')' at position " << i << std::endl;
+                display_err("unexpected ')'", stm, i);
                 break;
             }
             case '~': {
@@ -462,8 +475,7 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
                 IF_DEBUG_VALIDATE(std::cout << "Result of NOT: " << tmp << std::endl);
                 if (tmp <= 0) {
                     is_valid &= false;
-                    std::cout << "Encountered invalid NOT at position " << i << std::endl
-                              << "    " << stm.substr(i,i+3) << "...\n";
+                    display_err("invalid NOT", stm, i);
                     IF_DEBUG_VALIDATE(std::cout << "Skipping " << -tmp << " \"" << stm.substr(i,i-tmp) << "\"\n");
                     IF_DEBUG_VALIDATE(std::cout << stm[i-tmp] << std::endl);
                     i -= tmp-1;
@@ -480,8 +492,7 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
                 int tmp = is_valid_and(stm, i);
                 if (tmp <= 0) {
                     is_valid &= false;
-                    std::cout << "Encountered invalid AND at position " << i << std::endl
-                              << "    " << stm.substr(i,i+3) << "...\n";
+                    display_err("invalid AND", stm, i);
                     IF_DEBUG_VALIDATE(std::cout << "Skipping " << -tmp << " \"" << stm.substr(i,i-tmp) << "\"\n");
                     IF_DEBUG_VALIDATE(std::cout << stm[i-tmp] << std::endl);
                     i -= tmp-1;
@@ -497,8 +508,7 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
                 int tmp = is_valid_or(stm, i);
                 if (tmp <= 0) {
                     is_valid &= false;
-                    std::cout << "Encountered invalid OR at position " << i << std::endl
-                              << "    " << stm.substr(i,i+3) << "...\n";
+                    display_err("invalid OR", stm, i);
                     IF_DEBUG_VALIDATE(std::cout << "Skipping " << -tmp << " \"" << stm.substr(i,i-tmp) << "\"\n");
                     IF_DEBUG_VALIDATE(std::cout << stm[i-tmp] << std::endl);
                     i -= tmp-1;
@@ -519,8 +529,7 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
                 }
                 if (tmp <= 0) {
                     is_valid &= false;
-                    std::cout << "Encountered invalid '&' at position " << i << std::endl
-                              << "    " << stm.substr(i,i+3) << "...\n";
+                    display_err("invalid &", stm, i);
                     IF_DEBUG_VALIDATE(std::cout << "Skipping " << -tmp << " \"" << stm.substr(i,i-tmp) << "\"\n");
                     IF_DEBUG_VALIDATE(std::cout << stm[i-tmp] << std::endl);
                     i -= tmp-1;
@@ -536,8 +545,7 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
                 int tmp = is_valid_implication(stm, i);
                 if (tmp <= 0) {
                     is_valid &= false;
-                    std::cout << "Encountered invalid IMPLICATION at position " << i << std::endl
-                              << "    " << stm.substr(i,i+3) << "...\n";
+                    display_err("invalid IMPLICATION", stm, i);
                     IF_DEBUG_VALIDATE(std::cout << "Skipping " << -tmp << " \"" << stm.substr(i,i-tmp) << "\"\n");
                     IF_DEBUG_VALIDATE(std::cout << stm[i-tmp] << std::endl);
                     i -= tmp-1;
@@ -553,8 +561,7 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
                 int tmp = is_valid_equivalence(stm, i);
                 if (tmp <= 0) {
                     is_valid &= false;
-                    std::cout << "Encountered invalid IFF at position " << i << std::endl
-                              << "    " << stm.substr(i,i+3) << "...\n";
+                    display_err("invalid IFF", stm, i);
                     IF_DEBUG_VALIDATE(std::cout << "Skipping " << -tmp << " \"" << stm.substr(i,i-tmp) << "\"\n");
                     IF_DEBUG_VALIDATE(std::cout << stm[i-tmp] << std::endl);
                     i -= tmp-1;
@@ -569,14 +576,12 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
                 int tmp = is_valid_var(stm[i]);
                 if (tmp < 0) {
                     is_valid &= false;
-                    std::cout << "Encountered unexpected character at position " << i << std::endl
-                              << "    " << stm.substr(i,i+3) << "...\n";
+                    display_err("unexpected character", stm, i);
                 } else {
                     if (expecting == OPERATOR) {
                         is_valid &= false;
-                        std::cout << "Encountered unexpected variable at position " << i << std::endl
-                                  << "    " << stm.substr(i,i+3) << "...\n"
-                                  << "    " << "Expected operator\n";
+                        display_err("unexpected variable", stm, i);
+                        std::cout << "    " << "Expected operator\n";
                     }
                     expecting = OPERATOR;
                     /*if (i > 1 && (is_valid_var(stm[i-1]) || stm[i-1] != '(' || stm[i-1] == ')')) {

@@ -1,4 +1,5 @@
 #include "validate.hpp"
+#include "statement.hpp"
 
 std::string test_valid_stm(std::string stm) {
     std::cout << "Testing statement \"" << stm << "\"\n";
@@ -28,7 +29,7 @@ int main(int argc, char const *argv[])
 
     std::cout << "\n\n";
 
-    std::cout << "Testing `is_valid_statement':\n";
+    /*std::cout << "Testing `is_valid_statement':\n";
     std::string stm = "(pvr)^(~q)&r";
     std::cout << test_valid_stm(stm) << std::endl;
     stm = "(pvr)&(~q)";
@@ -59,5 +60,25 @@ int main(int argc, char const *argv[])
     std::cout << test_valid_stm(stm) << std::endl;
     stm = "(abcd)v(efgh)&i";
     std::cout << test_valid_stm(stm) << std::endl;
+
+    std::cout << "\n";*/
+
+    std::cout << "Testing `add_parentheses':\n";
+    std::string stm = "~a^bVc->d<->e->fORgAND~h";
+    std::string res = add_parentheses(stm);
+    std::cout << "add_parentheses(\"" << stm << "\") = \"" << res << "\"\n";
+    std::vector<std::string> operands = find_operands(res,0);
+    for (auto s : operands) {
+        std::cout << s << std::endl;
+    }
+    stm = "~~(~~~p)";
+    res = add_parentheses(stm);
+    std::cout << "add_parentheses(\"" << stm << "\") = \"" << res << "\"\n";
+    stm = "aANDb&&c";
+    res = add_parentheses(stm);
+    std::cout << "add_parentheses(\"" << stm << "\") = \"" << res << "\"\n";
+    stm = "pORqV(r->s^p<->r->~(~p&&(~(s))))AND(pORqIFFqVp)&((~~r))";
+    res = add_parentheses(stm);
+    std::cout << "add_parentheses(\"" << stm << "\") = \"" << res << "\"\n";
     return 0;
 }
