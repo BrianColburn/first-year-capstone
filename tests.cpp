@@ -68,17 +68,23 @@ int main(int argc, char const *argv[])
     std::string res = add_parentheses(stm);
     std::cout << "add_parentheses(\"" << stm << "\") = \"" << res << "\"\n";
     std::vector<std::string> operands = find_operands(res,0);
-    for (auto s : operands) {
-        std::cout << s << std::endl;
-    }
+    //for (auto s : operands) {
+    //    std::cout << s << std::endl;
+    //}
+    //std::cout << parse_vector(operands) << std::endl;
+    std::cout << "parse_string(\"" << res << "\") = " << parse_string(res) << std::endl;
+    //std::cout << parse_string("(a)^(b)") << std::endl;
     stm = "~~(~~~p)";
     res = add_parentheses(stm);
     std::cout << "add_parentheses(\"" << stm << "\") = \"" << res << "\"\n";
+    std::cout << "parse_string(\"" << res << "\") = " << parse_string(res) << std::endl;
     stm = "aANDb&&c";
     res = add_parentheses(stm);
     std::cout << "add_parentheses(\"" << stm << "\") = \"" << res << "\"\n";
+    std::cout << "parse_string(\"" << res << "\") = " << parse_string(res) << std::endl;
     stm = "pORqV(r->s^p<->r->~(~p&&(~(s))))AND(pORqIFFqVp)&((~~r))";
     res = add_parentheses(stm);
     std::cout << "add_parentheses(\"" << stm << "\") = \"" << res << "\"\n";
+    std::cout << "parse_string(\"" << res << "\") = " << parse_string(res) << std::endl;
     return 0;
 }

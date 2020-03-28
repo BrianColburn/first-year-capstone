@@ -7,6 +7,7 @@
 
 #include "validate.hpp"
 
+
 enum Operator {VAR, NOT, AND, OR, IFT, IFF};
 
 class Statement {
@@ -22,7 +23,24 @@ class Statement {
         std::set<char> collectVars() const; // Collect all the variables in the statement
         std::set<Statement> collectExpressions() const; // All the expressions
         bool evaluate(std::map<char,bool>) const; // Evaluate the statement
+        friend std::ostream& operator<<(std::ostream& os, const Statement& stm);
 };
+
+Statement parse_string(std::string stm);
+Statement parse_vector(std::vector<std::string> vec);
+std::vector<std::string> find_operands(std::string stm, int ix);
+
+std::ostream& operator<<(std::ostream& os, const Statement& stm) {
+    switch (stm.type) {
+        case VAR: os << stm.var; break;
+        case NOT: os << "~(" << stm.operands[0] << ")"; break;
+        case AND: os << "(" << stm.operands[0] << ")^(" << stm.operands[1] << ")"; break;
+        case OR:  os << "(" << stm.operands[0] << ")v(" << stm.operands[1] << ")"; break;
+        case IFT: os << "(" << stm.operands[0] << ")->(" << stm.operands[1] << ")"; break;
+        case IFF: os << "(" << stm.operands[0] << ")<->(" << stm.operands[1] << ")"; break;
+    }
+    return os;
+}
 
 Statement::Statement(char c) {
     type = VAR;
@@ -35,61 +53,60 @@ Statement::Statement(Operator op, std::vector<Statement> args) {
 }
 
 Statement parse_string(std::string stm) {
-    return Statement('x');
+    //std::cout << "parse_string(\"" << stm << "\")\n";
+    return parse_vector(find_operands(stm,0));
 }
 
-Statement parse_vector(std::vector<std::string>& vec) {
+Statement parse_vector(std::vector<std::string> vec) {
     std::vector<Statement> args;
     if (vec.size() == 1) {
         return Statement(vec[0][0]);
     } else if (!vec[0].compare("~")) {
-        args.push_back(parse_string(vec[1]));
+        args.push_back(parse_string(vec[2]));
         return Statement(NOT, args);
     } else if (!vec[0].compare("AND") ||
                !vec[0].compare("&") ||
                !vec[0].compare("^")) {
-        args.push_back(parse_string(vec[0]));
         args.push_back(parse_string(vec[1]));
+        args.push_back(parse_string(vec[2]));
         return Statement(AND, args);
     } else if (!vec[0].compare("OR") ||
                !vec[0].compare("V") ||
                !vec[0].compare("v") ||
                !vec[0].compare("&&")) {
-        args.push_back(parse_string(vec[0]));
         args.push_back(parse_string(vec[1]));
+        args.push_back(parse_string(vec[2]));
         return Statement(OR, args);
     } else if (!vec[0].compare("->")) {
-        args.push_back(parse_string(vec[0]));
         args.push_back(parse_string(vec[1]));
+        args.push_back(parse_string(vec[2]));
         return Statement(IFT, args);
     } else if (!vec[0].compare("IFF") ||
                !vec[0].compare("<->")) {
-        args.push_back(parse_string(vec[0]));
         args.push_back(parse_string(vec[1]));
+        args.push_back(parse_string(vec[2]));
         return Statement(IFF, args);
     }
+    std::cout << "Encountered unexpected token \"" << vec[0] << "\"\n";
     return Statement('x');
 }
 
-std::vector<std::string> find_operands(const std::string& stm, int ix) {
+std::vector<std::string> find_operands(std::string stm, int ix) {
+    //std::cout << "f_o(\"" << stm << "\")\n";
     std::vector<std::string> args;
 
     if (stm[ix] == '(') {
         int expr_length = find_close_paren(stm,ix);
-        args.push_back(stm.substr(ix+1, expr_length));
-        ix += expr_length;
-        int next_arg = stm.find("(",ix);
-        args.insert(args.begin(),stm.substr(ix+2,next_arg-(ix+2)));
-        expr_length = find_close_paren(stm,next_arg);
-        args.push_back(stm.substr(next_arg+1, expr_length));
-        for (auto s : find_operands(args[1],0)) {
-            std::cout << s << ", ";
+        if (expr_length == stm.size()-2) {
+            return find_operands(stm.substr(ix+1,stm.size()-2), 0);
+        } else {
+            args.push_back(stm.substr(ix+1, expr_length));
+            ix += expr_length;
+            int next_arg = stm.find("(",ix);
+            args.insert(args.begin(),stm.substr(ix+2,next_arg-(ix+2)));
+            expr_length = find_close_paren(stm,next_arg);
+            args.push_back(stm.substr(next_arg+1, expr_length));
         }
-        std::cout << std::endl;
-        for (auto s : find_operands(args[2],0)) {
-            std::cout << s << ", ";
-        }
-        std::cout << std::endl;
     } else if (stm[ix] == '~') {
         args.push_back("~");
         args.push_back("");
@@ -99,6 +116,11 @@ std::vector<std::string> find_operands(const std::string& stm, int ix) {
     } else {
         std::cout << "`find_operands': Unexpected character '" << stm[ix] << "'\n";
     }
+    /*std::cout << "f_o(\"" << stm << "\") = ";
+    for (std::string s : args) {
+        std::cout << s << ", ";
+    }
+    std::cout << std::endl;*/
     
     return args;
 }
