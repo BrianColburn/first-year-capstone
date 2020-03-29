@@ -179,6 +179,8 @@ int is_valid_not(const std::string& stm, int ix) {
             length = tmp > 0 ? tmp + length : tmp - length;
             IF_DEBUG_VALIDATE(std::cout << "NOT length: " << length << std::endl);
         } else if (stm[ix+length] == '~') { //   or another negation.
+            std::cout << "Warning: ";
+            display_err("redundant NOT", stm, ix);
             int tmp = is_valid_not(stm, ix+1); // This could probably be written as a loop.
                                                // Left as is for now since we don't care
                                                //   *that* much about performance.
