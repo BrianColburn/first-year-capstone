@@ -10,23 +10,23 @@
 
 
 enum Operator {VAR, NOT, AND, OR, IFT, IFF};
+enum StringType {ASCII, UNICODE, MATH_JAX, TEX};
 
 class Statement {
     private:
         Operator type;
         char var;
         std::vector<Statement> operands;
+        std::vector<Statement> _collect_expressions() const; // All the expressions
     public:
         Statement(std::string&); // Parse a statement from a string
         Statement(char); // Create a variable
         Statement(Operator, std::vector<Statement>); // Create an operator
-        std::string to_string() const; // For debug purposes right now
+        std::string to_string() const;
         std::set<char> collect_vars() const; // Collect all the variables in the statement
         std::vector<Statement> collect_expressions() const; // All the expressions
-        bool evaluate(std::map<char,bool>) const; // Evaluate the statement
-        friend std::ostream& operator<<(std::ostream& os, const Statement& stm); // Easy output
-        bool operator ==(const Statement&) const;
-        bool operator <(const Statement&) const;
+        bool evaluate(const std::map<char,bool>&) const; // Evaluate the statement
+        friend std::ostream& operator<<(std::ostream& os, const Statement& stm); // For debug purposes right now
 };
 
 Statement parse_string(std::string stm);
@@ -69,12 +69,22 @@ std::set<char> Statement::collect_vars() const {
     return vset;
 }
 
-std::vector<Statement> Statement::collect_expressions() const {
+std::vector<Statement> Statement::_collect_expressions() const {
     std::vector<Statement> statements;
     for (Statement s : operands) {
-        for (Statement s2 : s.collect_expressions())
+        for (Statement s2 : s._collect_expressions())
             statements.push_back(s2);
         statements.push_back(s);
+    }
+    return statements;
+}
+
+std::vector<Statement> Statement::collect_expressions() const {
+    std::vector<Statement> statements = _collect_expressions();
+    if (type == VAR) {
+        statements.push_back(Statement(var));
+    } else {
+        statements.push_back(Statement(type, operands));
     }
     return statements;
 }
@@ -83,32 +93,37 @@ std::ostream& operator<<(std::ostream& os, const Statement& stm) {
     return os << stm.to_string();
 }
 
-bool Statement::operator ==(const Statement& s1) const {
-    if (type == s1.type) {
-        if (type == VAR)
-            return var == s1.var;
-        else if (type == NOT)
-            return operands[0] == s1.operands[0];
-        else
-            return operands[0] == s1.operands[0] &&
-                   operands[1] == s1.operands[1];
-    } else {
-        return false;
+bool Statement::evaluate(const std::map<char,bool>& vals) const {
+    switch (type) {
+        case VAR: {
+                      try {
+                          return vals.at(var);
+                      } catch (const std::out_of_range& e) {
+                          std::cout << "Variable '" << var << "' does not have a value\n";
+                          return false;
+                      }
+                  }
+        case NOT: return !operands[0].evaluate(vals);
+        case AND: return operands[0].evaluate(vals) && operands[1].evaluate(vals);
+        case OR:  return operands[0].evaluate(vals) || operands[1].evaluate(vals);
+        case IFT: return !operands[0].evaluate(vals) || operands[1].evaluate(vals);
+        case IFF: return operands[0].evaluate(vals) == operands[1].evaluate(vals);
     }
 }
 
-bool Statement::operator <(const Statement& s1) const {
-    if (type == s1.type) {
-        if (type == VAR)
-            return var < s1.var;
-        else if (type == NOT)
-            return operands[0] < s1.operands[0];
-        else
-            return operands[0] < s1.operands[0] &&
-                   operands[1] < s1.operands[1];
-    } else {
-        return false;
+std::vector<std::map<char,bool>> generate_vals(const Statement& stm) {
+    std::vector<std::map<char,bool>> maps;
+    std::set<char> svars = stm.collect_vars();
+    std::vector<char> vars(svars.begin(), svars.end());
+
+    for (unsigned long i = 0; i < (1<<vars.size()); i++) {
+        std::map<char,bool> mtmp;
+        for (unsigned long j = 0; j < vars.size(); j++) {
+            mtmp[vars[j]] = i & (1<<j);
+        }
+        maps.push_back(mtmp);
     }
+    return maps;
 }
 
 Statement parse_string(std::string stm) {

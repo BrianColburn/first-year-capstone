@@ -11,6 +11,13 @@
   #define IF_DEBUG_VALIDATE(x)
 #endif
 
+void remove_spaces(std::string& stm) {
+    for (std::string::iterator i = stm.begin(); i != stm.end(); ++i) {
+        if (*i == ' ')
+            stm.erase(i);
+    }
+}
+
 void display_err(std::string err, const std::string& stm, int ix) {
     std::cout << "Encountered " << err << " at position " << ix << std::endl;
     std::cout << stm << std::endl;
@@ -18,7 +25,8 @@ void display_err(std::string err, const std::string& stm, int ix) {
     std::cout << '^' << std::endl;
 }
 
-int is_valid_statement(const std::string& stm, int start, int end);
+int _is_valid_statement(const std::string& stm);
+int _is_valid_statement(const std::string& stm, int start, int end);
 
 /**
  * Given a string and an index of a '(' to start from, return the
@@ -154,7 +162,7 @@ int is_valid_var(const char& c) {
  *   Since we might need to traverse the entire string.
  * Space: O(1)
  *   We only need 4 bytes for `ix' since `stm' is const&.
- * TODO: Space is likely wrong, since `is_valid_statement' could be called
+ * TODO: Space is likely wrong, since `_is_valid_statement' could be called
  */
 int is_valid_not(const std::string& stm, int ix) {
     IF_DEBUG_VALIDATE(std::cout << "Entered `is_valid_not\n");
@@ -171,7 +179,7 @@ int is_valid_not(const std::string& stm, int ix) {
 
             IF_DEBUG_VALIDATE(std::cout << "(ivn) Checking sub expression\n");
 
-            int tmp = is_valid_statement(stm, start, end);
+            int tmp = _is_valid_statement(stm, start, end);
 
             IF_DEBUG_VALIDATE(std::cout << "(ivn) result of subexpression: " << tmp << std::endl);
 
@@ -207,7 +215,7 @@ int is_valid_not(const std::string& stm, int ix) {
  *   Since we may need to traverse the entire string.
  * Space: O(1)
  *   Since `stm' is const&.
- * TODO: Space is likely wrong, since `is_valid_statement' could be called
+ * TODO: Space is likely wrong, since `_is_valid_statement' could be called
  */
 int is_valid_and(const std::string& stm, int ix) {
     IF_DEBUG_VALIDATE(std::cout << "Entered `is_valid_and', " << stm.substr(ix) << " " << ix << "\n");
@@ -223,7 +231,7 @@ int is_valid_and(const std::string& stm, int ix) {
             IF_DEBUG_VALIDATE(std::cout << "(iva) Checking from " << start << " to " << end << std::endl);
             IF_DEBUG_VALIDATE(std::cout << "(iva) (\"" << stm.substr(start, end-start) << "\")\n");
 
-            int tmp = is_valid_statement(stm, start, end);
+            int tmp = _is_valid_statement(stm, start, end);
             IF_DEBUG_VALIDATE(std::cout << "(iva) ivs results: " << tmp << std::endl);
             length += 2; // Add space for the parentheses
             length = tmp > 0 ? tmp + length : tmp - length;
@@ -260,7 +268,7 @@ int is_valid_and(const std::string& stm, int ix) {
  *   Since we may need to traverse the entire string.
  * Space: O(1)
  *   Since `stm' is const&.
- * TODO: Space is likely wrong, since `is_valid_statement' could be called
+ * TODO: Space is likely wrong, since `_is_valid_statement' could be called
  */
 int is_valid_or(const std::string& stm, int ix) {
     IF_DEBUG_VALIDATE(std::cout << "Entered `is_valid_or\n");
@@ -276,7 +284,7 @@ int is_valid_or(const std::string& stm, int ix) {
             IF_DEBUG_VALIDATE(std::cout << "(ivo) Checking from " << start << " to " << end << std::endl);
             IF_DEBUG_VALIDATE(std::cout << "(ivo) (\"" << stm.substr(start, end-start) << "\")\n");
 
-            int tmp = is_valid_statement(stm, start, end);
+            int tmp = _is_valid_statement(stm, start, end);
             IF_DEBUG_VALIDATE(std::cout << "(ivo) ivs results: " << tmp << std::endl);
             length += 2; // Add space for the parentheses
             length = tmp > 0 ? tmp + length : tmp - length;
@@ -316,7 +324,7 @@ int is_valid_implication(const std::string& stm, int ix) {
             IF_DEBUG_VALIDATE(std::cout << "(ivi) Checking from " << start << " to " << end << std::endl);
             IF_DEBUG_VALIDATE(std::cout << "(ivi) (\"" << stm.substr(start, end-start) << "\")\n");
 
-            int tmp = is_valid_statement(stm, start, end);
+            int tmp = _is_valid_statement(stm, start, end);
             IF_DEBUG_VALIDATE(std::cout << "(ivi) ivs results: " << tmp << std::endl);
             length += 2; // Add space for the parentheses
             length = tmp > 0 ? tmp + length : tmp - length;
@@ -357,7 +365,7 @@ int is_valid_equivalence(const std::string& stm, int ix) {
             IF_DEBUG_VALIDATE(std::cout << "(ive) Checking from " << start << " to " << end << std::endl);
             IF_DEBUG_VALIDATE(std::cout << "(ive) (\"" << stm.substr(start, end-start) << "\")\n");
 
-            int tmp = is_valid_statement(stm, start, end);
+            int tmp = _is_valid_statement(stm, start, end);
             IF_DEBUG_VALIDATE(std::cout << "(ive) ivs results: " << tmp << std::endl);
             length += 2; // Add space for the parentheses
             length = tmp > 0 ? tmp + length : tmp - length;
@@ -420,15 +428,19 @@ IF_DEBUG_VALIDATE(int cnt;)
  * Space: I'm going to assume O(stm.size()) and hope for O(1)
  *   Because all other `is_valid_*' functions are O(1).
  */
-int is_valid_statement(const std::string& stm) {
+bool is_valid_statement(const std::string& stm) {
+    return _is_valid_statement(stm) > 0;
+}
+
+int _is_valid_statement(const std::string& stm) {
     IF_DEBUG_VALIDATE(cnt = 0;)
-    int result = is_valid_statement(stm, 0, stm.size());
+    int result = _is_valid_statement(stm, 0, stm.size());
     IF_DEBUG_VALIDATE(std::cout << "Looped " << cnt << " times\n";)
     return result;
 }
 
-int is_valid_statement(const std::string& stm, const int start, const int end) {
-    IF_DEBUG_VALIDATE(std::cout << "Entered `is_valid_statement\n");
+int _is_valid_statement(const std::string& stm, const int start, const int end) {
+    IF_DEBUG_VALIDATE(std::cout << "Entered `_is_valid_statement\n");
     IF_DEBUG_VALIDATE(std::cout << "Testing statement \"" << stm.substr(start, end-start) << "\"\n");
     bool is_valid = true; // Give it the benefit of the doubt.
 
@@ -459,7 +471,7 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
                 is_valid &= expecting == OPERAND;
                 int close_paren = find_close_paren(stm, i);
                 IF_DEBUG_VALIDATE(std::cout << "Encountered sub-expression \"" << stm.substr(i+1,close_paren) << "\"\n");
-                int tmp = is_valid_statement(stm, i+1, i+1+close_paren);
+                int tmp = _is_valid_statement(stm, i+1, i+1+close_paren);
                 i += tmp > 0 ? tmp+2-1 : -(tmp+2-1);
                 if (tmp == 0) i++;
                 is_valid &= tmp > 0;
@@ -597,7 +609,7 @@ int is_valid_statement(const std::string& stm, const int start, const int end) {
     }
 
     IF_DEBUG_VALIDATE(std::cout << "\"" << stm.substr(start, end-start) << "\" was found " << (is_valid ? "valid" : "invalid") << std::endl);
-    IF_DEBUG_VALIDATE(std::cout << "Exited `is_valid_statement\n");
+    IF_DEBUG_VALIDATE(std::cout << "Exited `_is_valid_statement\n");
 
     return is_valid ? end-start : start-end;
 }
