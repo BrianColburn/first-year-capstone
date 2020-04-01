@@ -23,6 +23,7 @@ class Statement {
         Statement(char); // Create a variable
         Statement(Operator, std::vector<Statement>); // Create an operator
         std::string to_string() const;
+        std::string to_string(const StringType&) const;
         std::set<char> collect_vars() const; // Collect all the variables in the statement
         std::vector<Statement> collect_expressions() const; // All the expressions
         bool evaluate(const std::map<char,bool>&) const; // Evaluate the statement
@@ -44,13 +45,61 @@ Statement::Statement(Operator op, std::vector<Statement> args) {
 }
 
 std::string Statement::to_string() const {
+    return to_string(ASCII);
+}
+
+std::string Statement::to_string(const StringType& format) const {
     switch (type) {
         case VAR: return std::string(1,var);
-        case NOT: return "~(" + operands[0].to_string() + ")";
-        case AND: return "(" + operands[0].to_string() + ")^(" + operands[1].to_string() + ")";
-        case OR:  return "(" + operands[0].to_string() + ")v(" + operands[1].to_string() + ")";
-        case IFT: return "(" + operands[0].to_string() + ")->(" + operands[1].to_string() + ")";
-        case IFF: return "(" + operands[0].to_string() + ")<->(" + operands[1].to_string() + ")";
+        case NOT: {
+            switch (format) {
+                case ASCII: case UNICODE: return "~(" + operands[0].to_string() + ")";
+                case MATH_JAX: case TEX: return "\\sim (" + operands[0].to_string() + ")";
+            }
+        }
+        case AND: {
+            switch (format) {
+                case ASCII:
+                    return "(" + operands[0].to_string() + ")^(" + operands[1].to_string() + ")";
+                case UNICODE:
+                    return "(" + operands[0].to_string() + ")∧(" + operands[1].to_string() + ")";
+                case MATH_JAX: case TEX:
+                    return "(" + operands[0].to_string() + ") \\land (" + operands[1].to_string() + ")";
+            }
+
+                  
+        }
+        case OR:  {
+            switch (format) {
+                case ASCII:
+                    return "(" + operands[0].to_string() + ")v(" + operands[1].to_string() + ")";
+                case UNICODE:
+                    return "(" + operands[0].to_string() + ")∨(" + operands[1].to_string() + ")";
+                case MATH_JAX: case TEX:
+                    return "(" + operands[0].to_string() + ") \\lor (" + operands[1].to_string() + ")";
+            }
+        }
+        case IFT: {
+            switch (format) {
+                case ASCII:
+                    return "(" + operands[0].to_string() + ")->(" + operands[1].to_string() + ")";
+                case UNICODE:
+                    return "(" + operands[0].to_string() + ")→(" + operands[1].to_string() + ")";
+                case MATH_JAX: case TEX:
+                    return "(" + operands[0].to_string() + ") \\to (" + operands[1].to_string() + ")";
+            }
+
+        }
+        case IFF: {
+            switch (format) {
+                case ASCII:
+                    return "(" + operands[0].to_string() + ")<->(" + operands[1].to_string() + ")";
+                case UNICODE:
+                    return "(" + operands[0].to_string() + ")↔(" + operands[1].to_string() + ")";
+                case MATH_JAX: case TEX:
+                    return "(" + operands[0].to_string() + ") \\leftrightarrow (" + operands[1].to_string() + ")";
+            }
+        }
     }
     std::cout << "Statement::to_string(): Unexpected type: " << type << std::endl;
     return "_";
@@ -109,6 +158,8 @@ bool Statement::evaluate(const std::map<char,bool>& vals) const {
         case IFT: return !operands[0].evaluate(vals) || operands[1].evaluate(vals);
         case IFF: return operands[0].evaluate(vals) == operands[1].evaluate(vals);
     }
+    std::cout << "Statement::evaluate: Unexpected type: " << type << std::endl;
+    return 1;
 }
 
 std::vector<std::map<char,bool>> generate_vals(const Statement& stm) {
