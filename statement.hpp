@@ -130,11 +130,7 @@ std::vector<Statement> Statement::_collect_expressions() const {
 
 std::vector<Statement> Statement::collect_expressions() const {
     std::vector<Statement> statements = _collect_expressions();
-    if (type == VAR) {
-        statements.push_back(Statement(var));
-    } else {
-        statements.push_back(Statement(type, operands));
-    }
+    statements.push_back(*this);
     return statements;
 }
 
