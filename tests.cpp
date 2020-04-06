@@ -11,14 +11,6 @@ std::string test_valid_stm(std::string stm) {
 
 int main(int argc, char const *argv[])
 {
-    std::cout << "Testing parentheses functions:\n";
-    std::cout << (find_close_paren("f(x+1)",1) == 3) << std::endl;
-    std::cout << (find_open_paren("f(x+1)",5) == 3) << std::endl;
-    std::cout << parens_matched("f(x+1)") << std::endl;
-    std::cout << !parens_matched("f)x+1(") << std::endl;
-    std::cout << !parens_matched("f(x+1(") << std::endl;
-    std::cout << !parens_matched("f)x+1)") << std::endl;
-
     std::string test_string = "f(x+g(y-h(1)))";
     int ix = 1;
     std::cout << test_string.substr(ix+1, find_close_paren(test_string, ix)) << std::endl;
