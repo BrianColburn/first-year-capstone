@@ -8,6 +8,13 @@
 
 #include "validate.hpp"
 
+#ifdef DSC // Debug Statement Complexity
+  #define IF_DSC(x) x
+#else
+  #define IF_DSC(c)
+#endif
+
+IF_DSC(int calls;)
 
 enum Operator {VAR, NOT, AND, OR, IFT, IFF};
 enum StringType {ASCII, UNICODE, MATH_JAX, TEX};
@@ -141,13 +148,13 @@ std::ostream& operator<<(std::ostream& os, const Statement& stm) {
 bool Statement::evaluate(const std::map<char,bool>& vals) const {
     switch (type) {
         case VAR: {
-                      try {
-                          return vals.at(var);
-                      } catch (const std::out_of_range& e) {
-                          std::cout << "Variable '" << var << "' does not have a value\n";
-                          return false;
-                      }
-                  }
+            try {
+                return vals.at(var);
+            } catch (const std::out_of_range& e) {
+                std::cout << "Variable '" << var << "' does not have a value\n";
+                throw e;
+            }
+        }
         case NOT: return !operands[0].evaluate(vals);
         case AND: return operands[0].evaluate(vals) && operands[1].evaluate(vals);
         case OR:  return operands[0].evaluate(vals) || operands[1].evaluate(vals);
@@ -173,12 +180,21 @@ std::vector<std::map<char,bool>> generate_vals(const Statement& stm) {
     return maps;
 }
 
+IF_DSC(int parse_str = 0; int parse_vec = 0; int parse_ = 0);
+
 Statement parse_string(std::string stm) {
-    //std::cout << "parse_string(\"" << stm << "\")\n";
-    return parse_vector(find_operands(stm,0));
+    IF_DSC(parse_str++; parse_++);
+    IF_DSC(std::cout << "parse_string(\"" << stm << "\")\n";)
+    Statement ret = parse_vector(find_operands(stm,0));
+    IF_DSC(std::cout << "Exited parse_string(\"" << stm << "\"(" << stm.size() << "))\nAfter calling `parse_string' " << parse_str << " times, `parse_vec' " << parse_vec << " times, and `parse_*' " << parse_ << " times\n");
+    return ret;
 }
 
 Statement parse_vector(std::vector<std::string> vec) {
+    IF_DSC(parse_vec++; parse_++);
+    IF_DSC(std::cout << "parse_vector(");
+    IF_DSC(for (std::string s : vec) std::cout << s << ", ");
+    IF_DSC(std::cout << ")\n");
     std::vector<Statement> args;
     if (vec.size() == 1) {
         return Statement(vec[0][0]);

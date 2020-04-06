@@ -19,6 +19,18 @@
 IF_DVC(int cnt;)
 IF_DVC(int calls;)
 
+/**
+ * Remove spaces from a string.
+ *
+ * Return Value
+ * -------------
+ * void because the original string is mutated.
+ *
+ * Complexity
+ * -----------
+ * Time: O(stm.size())
+ * Space: O(1)
+ */
 void remove_spaces(std::string& stm) {
     for (std::string::iterator i = stm.begin(); i != stm.end(); ++i) {
         if (*i == ' ')
@@ -26,15 +38,26 @@ void remove_spaces(std::string& stm) {
     }
 }
 
-void display_err(std::string err, const std::string& stm, int i) {
+/**
+ * Display an error and point at a specific character.
+ *
+ * Return Value
+ * -------------
+ * void since it outputs to stdout.
+ *
+ * Complexity
+ * -----------
+ * Time: O(i)
+ *   I'm assuming `std::string(int,char)' is O(n)
+ * Space: O(i)
+ *   I'm assuming `std::string(int,char)' is O(n)
+ */
+void display_err(const std::string& err, const std::string& stm, int i) {
     std::cout << "Encountered " << err << " at position " << i << std::endl;
     std::cout << stm << std::endl;
     std::cout << std::string(i, ' ');
     std::cout << '^' << std::endl;
 }
-
-int _is_valid_statement(const std::string& stm);
-int _is_valid_statement(const std::string& stm, int start, int end);
 
 /**
  * Given a string and an index of a '(' to start from, return the
@@ -119,7 +142,6 @@ int find_open_paren(const std::string& str, int i) {
 
 
 enum ExprType {OPERAND, OPERATOR};
-enum Expr {VAR, NOT, AND, OR, IFT, IFF};
 
 /**
  * A statement is valid if all operators/operands are valid.
@@ -128,9 +150,7 @@ enum Expr {VAR, NOT, AND, OR, IFT, IFF};
  * 
  * Return Value
  * -----------
- * An integer representing the number of characters
- *   for the calling function to skip.
- * Positive if valid, negative if invalid.
+ * true if valid, false if invalid.
  *
  * Parameters
  * -----------
@@ -144,7 +164,7 @@ enum Expr {VAR, NOT, AND, OR, IFT, IFF};
  *   Great care has been taken to avoid re-checking anything and everything.
  * 
  * Space: O(1)
- *   Since we use a constant number of operators and `stm' is const&.
+ *   Since we use a constant number of variables and `stm' is const&.
  */
 bool is_valid_statement(const std::string& stm) {
     IF_DVC(cnt = 0;)

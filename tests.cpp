@@ -1,5 +1,5 @@
 #include "validate.hpp"
-//#include "statement.hpp"
+#include "statement.hpp"
 
 std::string test_valid_stm(std::string stm) {
     std::cout << "Testing statement \"" << stm << "\"\n";
@@ -11,14 +11,6 @@ std::string test_valid_stm(std::string stm) {
 
 int main(int argc, char const *argv[])
 {
-    /*std::cout << "Testing parentheses functions:\n";
-    std::cout << (find_close_paren("f(x+1)",1) == 3) << std::endl;
-    std::cout << (find_open_paren("f(x+1)",5) == 3) << std::endl;
-    std::cout << parens_matched("f(x+1)") << std::endl;
-    std::cout << !parens_matched("f)x+1(") << std::endl;
-    std::cout << !parens_matched("f(x+1(") << std::endl;
-    std::cout << !parens_matched("f)x+1)") << std::endl;
-
     std::string test_string = "f(x+g(y-h(1)))";
     int ix = 1;
     std::cout << test_string.substr(ix+1, find_close_paren(test_string, ix)) << std::endl;
@@ -27,7 +19,7 @@ int main(int argc, char const *argv[])
         start  = ix-length;
     std::cout << test_string.substr(start, length) << std::endl;
 
-    std::cout << "\n\n";*/
+    std::cout << "\n\n";
     std::string stm;
 
     std::cout << "Testing `is_valid_statement':\n";
@@ -64,7 +56,7 @@ int main(int argc, char const *argv[])
 
     std::cout << "\n";
 
-    /*std::cout << "Testing `add_parentheses':\n";
+    std::cout << "Testing `add_parentheses':\n";
     stm = "a AND b OR c";//"~a^bVc->d<->e->fORgAND~h";
     std::cout << "remove_spaces(\"" << stm << "\") = ";
     remove_spaces(stm);
@@ -109,6 +101,6 @@ int main(int argc, char const *argv[])
     stm = "pORqV(r->s^p<->r->~(~p&&(~(s))))AND(pORqIFFqVp)&((~~r))";
     res = add_parentheses(stm);
     std::cout << "add_parentheses(\"" << stm << "\") = \"" << res << "\"\n";
-    std::cout << "parse_string(\"" << res << "\") = " << parse_string(res) << std::endl;*/
+    std::cout << "parse_string(\"" << res << "\") = " << parse_string(res) << std::endl;
     return 0;
 }
