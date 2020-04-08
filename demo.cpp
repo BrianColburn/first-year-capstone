@@ -31,15 +31,22 @@ int main() {
         for (Statement s : subs)
             cout << s << ", ";
         cout << endl;
+        cout << statement.collect_expressions().size() << endl;
 
         auto variable_values = generate_vals(statement);
-        for (map<char,bool> vars : variable_values) {
-            cout << "For ";
-            for (auto entry : vars) {
-                cout << entry.first << "=" << entry.second << ", ";
-            }
+        //for (map<char,bool> vars : variable_values) {
+        for (int i = 0; i < variable_values.size(); i++) {
+            vector<bool> values;
+            map<char, bool> vars = variable_values[i];
+            for (Statement s : subs)
+                cout << s << ", ";
             cout << endl;
-            cout << "\"" << statement << "\".evaluate(vars) = " << statement.evaluate(vars) << endl;
+            for (Statement s : subs)
+                values.push_back(s.evaluate(vars));
+            cout << "Stored in vector: ";
+            for (bool b : values)
+                cout << b << ", ";
+            cout << endl;
         }
     } else {
         cout << "The expression was not found valid. There should be error messages printed above that can help.\n";
