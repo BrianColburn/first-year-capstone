@@ -313,7 +313,7 @@ std::string add_parentheses(std::string stm) {
             stm.insert(i, "(");
             j = i+1;
             cnt = 1;
-            while (cnt > 0 && j < stm.size()-1) {
+            while (cnt > 0 && j < stm.size()) {
                 if (stm[j] == ')') cnt--;
                 else if (stm[j] == '(') cnt++;
                 if (cnt > 0) j++;

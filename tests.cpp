@@ -102,5 +102,9 @@ int main(int argc, char const *argv[])
     res = add_parentheses(stm);
     std::cout << "add_parentheses(\"" << stm << "\") = \"" << res << "\"\n";
     std::cout << "parse_string(\"" << res << "\") = " << parse_string(res) << std::endl;
+    stm = "pANDq->z";
+    res = add_parentheses(stm);
+    std::cout << "add_parentheses(\"" << stm << "\") = \"" << res << "\"\n";
+    std::cout << "parse_string(\"" << res << "\") = " << parse_string(res) << std::endl;
     return 0;
 }
