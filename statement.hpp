@@ -33,8 +33,12 @@ class Statement {
         std::string to_string(const StringType&) const;
         std::set<char> collect_vars() const; // Collect all the variables in the statement
         std::vector<Statement> collect_expressions() const; // All the expressions
+        std::vector<Statement> collect_expressions_ordered() const; // All the expressions, with variables first
         bool evaluate(const std::map<char,bool>&) const; // Evaluate the statement
         friend std::ostream& operator<<(std::ostream& os, const Statement& stm); // For debug purposes right now
+        bool operator==(const Statement& stm) const;
+        bool operator!=(const Statement& stm) const {return !(*this == stm);}
+        bool operator<(const Statement& stm) const;
 };
 
 Statement parse_string(std::string stm);
@@ -128,8 +132,9 @@ std::set<char> Statement::collect_vars() const {
 std::vector<Statement> Statement::_collect_expressions() const {
     std::vector<Statement> statements;
     for (Statement s : operands) {
-        for (Statement s2 : s._collect_expressions())
+        for (Statement s2 : s._collect_expressions()) {
             statements.push_back(s2);
+        }
         statements.push_back(s);
     }
     return statements;
@@ -141,8 +146,75 @@ std::vector<Statement> Statement::collect_expressions() const {
     return statements;
 }
 
+std::vector<Statement> Statement::collect_expressions_ordered() const {
+    std::vector<Statement> ustatements = collect_expressions();
+    std::vector<Statement> statements;
+    statements.push_back(ustatements[0]);
+    for (int i = 1; i < ustatements.size(); i++) {
+        for (std::vector<Statement>::iterator stm = statements.begin(); stm < statements.end(); stm++) {
+            //std::cout << "Checking " << ustatements[i] << " and " << *stm << std::endl;
+            if (*stm < ustatements[i] && stm+1 < statements.end()) {
+                //std::cout << "Not inserting " << ustatements[i] << " yet\n";
+            } else if (ustatements[i] == *stm) {
+                //std::cout << "Already inserted " << ustatements[i] << std::endl;
+                break;
+            } else if (ustatements[i].type == VAR && stm->type != VAR) {
+                //std::cout << "Inserting " << ustatements[i] << " before " << *stm << std::endl;
+                statements.insert(stm, ustatements[i]);
+                break;
+            } else if (ustatements[i].type != VAR && stm->type == VAR && stm+1 < statements.end()) {
+                continue;
+            } else {
+                //std::cout << "Inserting " << ustatements[i] << " after " << *stm << std::endl;
+                statements.insert(stm+1, ustatements[i]);
+                break;
+            }
+        }
+    }
+    return statements;
+}
+
 std::ostream& operator<<(std::ostream& os, const Statement& stm) {
     return os << stm.to_string();
+}
+
+bool Statement::operator==(const Statement& stm) const {
+    //std::cout << *this << " =?= " << stm << " = ";
+    if (type == stm.type && operands.size() == stm.operands.size()) {
+        if (type == VAR) {
+            //std::cout << (var == stm.var) << std::endl;
+            return var == stm.var;
+        } else {
+            for (int i = 0; i < operands.size(); i++) {
+                if (!(operands[i] == stm.operands[i])) {
+                    //std::cout << 0 << std::endl;
+                    return false;
+                }
+            }
+        }
+        //std::cout << 1 << std::endl;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool Statement::operator<(const Statement& stm) const {
+    //std::cout << *this << " <? " << stm << " = ";
+    if (type == VAR && stm.type == VAR) {
+        //std::cout << (var < stm.var) << std::endl;
+        return var < stm.var;
+    } else {
+        for (int i = 0; i < stm.operands.size(); i++) {
+            //std::cout << *this << " <? " << stm.operands[i] << " from " << stm << " = ";
+            if (*this == stm.operands[i] || *this < stm.operands[i]) {
+                //std::cout << 1 << std::endl;
+                return true;
+            }
+        }
+    }
+    //std::cout << 0 << std::endl;
+    return false;
 }
 
 bool Statement::evaluate(const std::map<char,bool>& vals) const {
