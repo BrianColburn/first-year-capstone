@@ -1,5 +1,7 @@
-#include "validate.hpp"
-#include "statement.hpp"
+#include "validate.h"
+#include "statement.h"
+
+using namespace logicians;
 
 std::string test_valid_stm(std::string stm) {
     std::cout << "Testing statement \"" << stm << "\"\n";
