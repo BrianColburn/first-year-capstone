@@ -6,44 +6,11 @@
 #include <map>
 #include <algorithm>
 
-#include "validate.hpp"
+#include "validate.h"
+#include "statement.h"
 
-#ifdef DSC // Debug Statement Complexity
-  #define IF_DSC(x) x
-#else
-  #define IF_DSC(c)
-#endif
-
-IF_DSC(int calls;)
-
-enum Operator {VAR, NOT, AND, OR, IFT, IFF};
-enum StringType {ASCII, UNICODE, MATH_JAX, TEX};
-
-class Statement {
-    private:
-        Operator type;
-        char var;
-        std::vector<Statement> operands;
-        std::vector<Statement> _collect_expressions() const; // All the expressions
-    public:
-        Statement(std::string&); // Parse a statement from a string
-        Statement(char); // Create a variable
-        Statement(Operator, std::vector<Statement>); // Create an operator
-        std::string to_string() const;
-        std::string to_string(const StringType&) const;
-        std::set<char> collect_vars() const; // Collect all the variables in the statement
-        std::vector<Statement> collect_expressions() const; // All the expressions
-        std::vector<Statement> collect_expressions_ordered() const; // All the expressions, with variables first
-        bool evaluate(const std::map<char,bool>&) const; // Evaluate the statement
-        friend std::ostream& operator<<(std::ostream& os, const Statement& stm); // For debug purposes right now
-        bool operator==(const Statement& stm) const;
-        bool operator!=(const Statement& stm) const {return !(*this == stm);}
-        bool operator<(const Statement& stm) const;
-};
-
-Statement parse_string(std::string stm);
-Statement parse_vector(std::vector<std::string> vec);
-std::vector<std::string> find_operands(std::string stm, int ix);
+//using logicians::Statement;
+namespace logicians {
 
 Statement::Statement(char c) {
     type = VAR;
@@ -174,7 +141,7 @@ std::vector<Statement> Statement::collect_expressions_ordered() const {
     return statements;
 }
 
-std::ostream& operator<<(std::ostream& os, const Statement& stm) {
+std::ostream& operator<<(std::ostream& os, const logicians::Statement& stm) {
     return os << stm.to_string();
 }
 
@@ -251,8 +218,6 @@ std::vector<std::map<char,bool>> generate_vals(const Statement& stm) {
     }
     return maps;
 }
-
-IF_DSC(int parse_str = 0; int parse_vec = 0; int parse_ = 0);
 
 Statement parse_string(std::string stm) {
     IF_DSC(parse_str++; parse_++);
@@ -334,19 +299,6 @@ std::vector<std::string> find_operands(std::string stm, int ix) {
     return args;
 }
 
-/**
- * This will help simplify `parse_statement'.
- * By transforming expressions as follows:
- * "a&bVc->d" to "(((a)&(b))V(c))->(d)"
- * we can simply recurse into the parentheses when parsing.
- *
- * Order of operations is as follows:
- * ~
- * AND/^/&
- * OR/v/V/&&
- * ->
- * IFF/<->
- */
 std::string add_parentheses(std::string stm) {
     int start = 0,
         end   = stm.size();
@@ -456,4 +408,6 @@ std::string add_parentheses(std::string stm) {
         }
     }
     return stm;
+}
+
 }

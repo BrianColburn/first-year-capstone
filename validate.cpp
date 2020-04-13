@@ -1,9 +1,10 @@
-#pragma once
 // TODO: Update complexities
 
 #include <string>
 #include <cctype>
 #include <iostream>
+
+#include "validate.h"
 
 #ifdef DEBUG_VALIDATE
   #define IF_DEBUG_VALIDATE(x) x
@@ -16,42 +17,18 @@
   #define IF_DVC(c)
 #endif
 
-IF_DVC(int cnt;)
-IF_DVC(int calls;)
+namespace logicians {
 
-/**
- * Remove spaces from a string.
- *
- * Return Value
- * -------------
- * void because the original string is mutated.
- *
- * Complexity
- * -----------
- * Time: O(stm.size())
- * Space: O(1)
- */
+IF_DVC(int cnt;)
+
 void remove_spaces(std::string& stm) {
+    // For all characters in the string,
     for (std::string::iterator i = stm.begin(); i != stm.end(); ++i) {
-        if (*i == ' ')
-            stm.erase(i);
+        if (*i == ' ') // if the character is a space
+            stm.erase(i); // it's gone.
     }
 }
 
-/**
- * Display an error and point at a specific character.
- *
- * Return Value
- * -------------
- * void since it outputs to stdout.
- *
- * Complexity
- * -----------
- * Time: O(i)
- *   I'm assuming `std::string(int,char)' is O(n)
- * Space: O(i)
- *   I'm assuming `std::string(int,char)' is O(n)
- */
 void display_err(const std::string& err, const std::string& stm, int i) {
     std::cout << "Encountered " << err << " at position " << i << std::endl;
     std::cout << stm << std::endl;
@@ -59,35 +36,19 @@ void display_err(const std::string& err, const std::string& stm, int i) {
     std::cout << '^' << std::endl;
 }
 
-/**
- * Given a string and an index of a '(' to start from, return the
- *   length of the substring up to the matching ')'.
- * 
- * ie:
- * find_close_paren("()", 0) -> 0
- * find_close_paren("(a)", 0) -> 1
- * find_close_paren("(a)", 1) -> -1
- * find_close_paren("f(x+1)", 1) -> 3
- * find_close_paren("x+1", 0) -> -1
- * 
- * Complexity
- * -----------
- * Time: O(str.size())
- *   Since, in the worst case scenario, we are given "(c1, c2, ..., cn)".
- * Space: O(1)
- *   We only need 12 bytes for the ints because str is const&.
- */
 int find_close_paren(const std::string& str, int i) {
-    int acc = 0,
-        length = -1;
+    int acc = 0, // We are not nested at all.
+        length = -1; // And have not traversed anything.
     if (i < 0 || i >= str.size() || str[i] != '(') {
         return length;
-    } else {
+    } else { // `i` is valid and `str[i]` is a '('.
         acc++;
         i++;
+        // While we haven't encountered the closing parentheses,
         while (acc) {
-            length++;
+            length++; // increment the length,
 
+            // and adjust nesting depth as needed.
             if (str[i] == '(') {
                 acc++;
             } else if (str[i] == ')') {
@@ -99,35 +60,19 @@ int find_close_paren(const std::string& str, int i) {
     }
 }
 
-/**
- * Given a string and an index of a ')' to start from, return the
- *   length of the substring up to the matching '('.
- * 
- * ie:
- * find_open_paren("()", 1) -> 0
- * find_open_paren("(a)", 2) -> 1
- * find_open_paren("(a)", 1) -> -1
- * find_open_paren("f(x+1)", 5) -> 3
- * find_open_paren("x+1", 0) -> -1
- * 
- * Complexity
- * -----------
- * Time: O(str.size())
- *   Since, in the worst case scenario, we are given "(c1, c2, ..., cn)".
- * Space: O(1)
- *   We only need 12 bytes for the ints because str is const&.
- */
 int find_open_paren(const std::string& str, int i) {
-    int acc = 0,
-        length = -1;
+    int acc = 0, // We are not nested at all.
+        length = -1; // And have not traversed anything.
     if (i < 0 || i >= str.size() || str[i] != ')') {
         return length;
-    } else {
+    } else { // `i` is valid and `str[i]` is a ')'.
         acc++;
         i--;
+        // While we haven't found the opening parentheses,
         while (acc) {
-            length++;
+            length++; // increment the length,
 
+            // and adjust nesting depth as needed.
             if (str[i] == ')') {
                 acc++;
             } else if (str[i] == '(') {
@@ -140,44 +85,18 @@ int find_open_paren(const std::string& str, int i) {
     }
 }
 
-
-enum ExprType {OPERAND, OPERATOR};
-
-/**
- * A statement is valid if all operators/operands are valid.
- * is_valid_statement traverses `stm' calling other `is_valid_*' functions
- *   as appropriate. It outputs human readable errors and warnings to stdout.
- * 
- * Return Value
- * -----------
- * true if valid, false if invalid.
- *
- * Parameters
- * -----------
- * const std::string& stm    the string to check
- *
- * Complexity
- * -----------
- * Time: O(stm.size())
- *   Since we must traverse the entire string,
- *     however it's closer to O(number of operators)
- *   Great care has been taken to avoid re-checking anything and everything.
- * 
- * Space: O(1)
- *   Since we use a constant number of variables and `stm' is const&.
- */
 bool is_valid_statement(const std::string& stm) {
     IF_DVC(cnt = 0;)
-    const int start = 0;
+    int i = 0; // The beginning is a great place to start.
     const int end = stm.size(); // O(1)
-    bool is_valid = true;
+    bool is_valid = true; // Give it the benefit of the doubt.
+    // All valid expressions must start with a variable, a negation, or a nested expression.
     ExprType expecting = OPERAND;
-    int i = start;
-    int depth = 0;
-    int length = 0;
-    char c;
+    int depth = 0; // We start at the top level,
+    int length = 0; // and have not gained any length.
+    char c; // The character to examine.
 
-    if (i < end) {
+    if (i < end) { // We do have something to examine, right?
         while (i < end) {
             IF_DVC(cnt++;)
             c = stm[i];
@@ -365,5 +284,7 @@ bool is_valid_statement(const std::string& stm) {
 
     IF_DVC(std::cout << "Looped " << cnt << " times to check statement of length " << stm.size() << "\n";)
     return is_valid;
+}
+
 }
 
