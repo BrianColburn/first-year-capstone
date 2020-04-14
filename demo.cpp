@@ -1,7 +1,8 @@
-#include "validate.hpp"
-#include "statement.hpp"
+#include "validate.h"
+#include "statement.h"
 
 using namespace std;
+using namespace logicians;
 
 int main() {
     string input;

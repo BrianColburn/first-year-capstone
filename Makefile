@@ -1,7 +1,7 @@
 default: demo
 
 demo: demo.cpp validate.o statement.o
-	g++ --std=c++11 demo.cpp -o demo
+	g++ --std=c++11 demo.cpp validate.o statement.o -o demo
 
 tests_debug: tests.cpp validate.o statement.o
 	g++ --std=c++11 tests.cpp statement.o validate.o -o tests -DDEBUG_VALIDATE
