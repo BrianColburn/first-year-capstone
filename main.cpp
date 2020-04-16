@@ -104,20 +104,20 @@ void exportHTML(vector<vector<string>> table)
 	
 	output << "<table style=\"width:100%\">\n"; //table
 	
-	for(int x = 0; x < table.size(); x++)
+	for(int r = 0; r < table.size(); r++)
 	{
 		output << "   <tr>\n";
-		for(int y = 0; y < table[x].size(); y++)
+		for(int c = 0; c < table[r].size(); c++)
 		{
             // The first row will hold your Table Headers, and thus uses "TH".
             // Every row after that will hold Table Data, hence "TD".
             // ie: for "p^q", you'd have to headers {"p", "q", "p^q"}
             // and the data {{0,0,0},{1,0,0},{0,1,0},{1,1,1}}
             // You can convert statements to strings by calling "Statement::to_string()".
-            if (y == 0) {
-                output << "      <th>" << table[x][y] << "</th>\n";
+            if (r == 0) {
+                output << "      <th>" << table[r][c] << "</th>\n";
             } else {
-                output << "      <td>" << table[x][y] << "</td>\n";
+                output << "      <td>" << table[r][c] << "</td>\n";
             }
 		}
 		output << "   </tr>\n";
@@ -136,15 +136,6 @@ string setup()
         "<!DOCTYPE html>"
         "<html>"
         "<head>"
-        "<meta charset=\"utf-8\">"
-        "<title></title>"
-        "<meta name=\"author\" content=\"\">"
-        "<meta name=\"description\" content=\"\">"
-        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-        "<link href=\"css/normalize.css\" rel=\"stylesheet\">"
-        "<link href=\"css/style.css\" rel=\"stylesheet\">"
-        "</head>"
-        ""
         "<body>";
 }
 
