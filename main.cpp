@@ -57,5 +57,5 @@ int main()
             if (choice[0] != '0')
                 cout << "Expression is currently: \"" << stm.to_string() << "\"\n";
         } while (choice[0] != '0');
-	}
+    }
 }
