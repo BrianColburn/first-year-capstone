@@ -21,16 +21,25 @@ void test_statements(std::string stm) {
     Statement statement = parse_string(res);
     std::cout << "parse_string(\"" << res << "\") = " << statement << std::endl;
 
+    int size = 0;
     std::vector<Statement> subs = statement.collect_expressions();
     std::cout << "\"" << statement << "\".collect_expressions() = ";
-    for (Statement s : subs)
+    for (Statement s : subs) {
         std::cout << s << ", ";
+        size += sizeof(s);
+    }
     std::cout << std::endl;
 
     subs = statement.collect_expressions_ordered();
     std::cout << "\"" << statement << "\".collect_expressions_ordered() = ";
     for (Statement s : subs)
         std::cout << s << ", ";
+    std::cout << std::endl;
+    std::cout << "Statement size: " << size << " bytes\n";
+    statement.transform(DeMORGANS);
+    std::cout << "DeMorgan'd: \"" << statement << "\"\n";
+    statement.transform(CANCEL_NOTS);
+    std::cout << "Simplified: \"" << statement << "\"\n";
     std::cout << "\n\n";
 }
 
@@ -99,6 +108,24 @@ int main(int argc, char const *argv[])
     test_statements(stm);
 
     stm = "a^~av(b->~a)";
+    test_statements(stm);
+
+    stm = "a";
+    test_statements(stm);
+
+    stm = "~a";
+    test_statements(stm);
+
+    stm = "avb";
+    test_statements(stm);
+
+    stm = "~(avb)";
+    test_statements(stm);
+
+    stm = "~~(avb)";
+    test_statements(stm);
+
+    stm = "~(avb)^c";
     test_statements(stm);
     return 0;
 }

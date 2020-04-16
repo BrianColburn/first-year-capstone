@@ -43,6 +43,13 @@ enum StringType {
     TEX       /**< The string format uses LaTeX syntax. */
 };
 
+/** The supported statement transformations
+ */
+enum Transformation {
+    DeMORGANS,  /**< p^q -> ~pv~q, pvq -> ~p^~q. */
+    CANCEL_NOTS /**< ~~p -> p. */
+};
+
 /** A class that represents boolean expressions.
  * Statement provides functionality for storing, manipulating,
  *   and displaying boolean expressions.
@@ -53,6 +60,10 @@ class Statement {
         char var; /**< The character used to represent this variable */
         std::vector<Statement> operands; /**< The operands this operator is applied to */
         std::vector<Statement> _collect_expressions() const; /**< Helper method for collecting expressions */
+        Statement operator-() const;
+        Statement operator*(const Statement& stm) const;
+        Statement operator+(const Statement& stm) const;
+
     public:
         /** Construct a statement containing a single variable.
          * @param c the character that represents the variable
@@ -157,6 +168,12 @@ class Statement {
          * @return whether this expression is contained within \a stm.
          */
         bool operator<(const Statement& stm) const;
+
+        /** Apply a transformation the the expression.
+         * @param t The transformation to apply.
+         * @see Transformation
+         */
+        void transform(const Transformation& t);
 };
 
 /** Create a Statement from a string.
