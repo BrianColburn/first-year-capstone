@@ -1,4 +1,7 @@
-default: tests_debug
+default: main
+
+main: main.cpp validate.o statement.o
+	g++ main.cpp validate.o statement.o -o logicians-main
 
 tests_debug: tests.cpp validate.o statement.o
 	g++ tests.cpp statement.o validate.o -o tests -DDEBUG_VALIDATE
