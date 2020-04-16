@@ -184,6 +184,60 @@ bool Statement::operator<(const Statement& stm) const {
     return false;
 }
 
+void Statement::transform(const Transformation& t) {
+    switch (t) {
+        case DeMORGANS: {
+            if (type == AND) {
+                type = OR;
+                operands[0].transform(t);
+                operands[0] = -operands[0];
+                operands[1].transform(t);
+                operands[1] = -operands[1];
+            } else if (type == OR) {
+                type = AND;
+                operands[0].transform(t);
+                operands[0] = -operands[0];
+                operands[1].transform(t);
+                operands[1] = -operands[1];
+            } else {
+                for (Statement& s : operands)
+                    s.transform(t);
+            }
+            break;
+        }
+        case CANCEL_NOTS: {
+            if (type == NOT && operands[0].type == NOT) {
+                operands[0].operands[0].transform(t);
+                type = operands[0].operands[0].type;
+                if (type == VAR) {
+                    var = operands[0].operands[0].var;
+                } else {
+                    operands = operands[0].operands[0].operands;
+                }
+            } else {
+                for (Statement& s : operands)
+                    s.transform(t);
+            }
+            break;
+        }
+    }
+}
+
+Statement Statement::operator-() const {
+    std::vector<Statement> v = {type == VAR ? Statement(var) : Statement(type,operands)};
+    return Statement(NOT, v);
+}
+
+Statement Statement::operator*(const Statement& stm) const {
+    std::vector<Statement> v = {type == VAR ? Statement(var) : Statement(type,operands),stm};
+    return Statement(AND, v);
+}
+
+Statement Statement::operator+(const Statement& stm) const {
+    std::vector<Statement> v = {type == VAR ? Statement(var) : Statement(type,operands),stm};
+    return Statement(OR, v);
+}
+
 bool Statement::evaluate(const std::map<char,bool>& vals) const {
     switch (type) {
         case VAR: {
@@ -236,29 +290,29 @@ Statement parse_vector(std::vector<std::string> vec) {
     if (vec.size() == 1) {
         return Statement(vec[0][0]);
     } else if (!vec[0].compare("~")) {
-        args.push_back(parse_string(vec[2]));
+        args.push_back(parse_vector(find_operands(vec[2],0)));
         return Statement(NOT, args);
     } else if (!vec[0].compare("AND") ||
                !vec[0].compare("&") ||
                !vec[0].compare("^")) {
-        args.push_back(parse_string(vec[1]));
-        args.push_back(parse_string(vec[2]));
+        args.push_back(parse_vector(find_operands(vec[1],0)));
+        args.push_back(parse_vector(find_operands(vec[2],0)));
         return Statement(AND, args);
     } else if (!vec[0].compare("OR") ||
                !vec[0].compare("V") ||
                !vec[0].compare("v") ||
                !vec[0].compare("&&")) {
-        args.push_back(parse_string(vec[1]));
-        args.push_back(parse_string(vec[2]));
+        args.push_back(parse_vector(find_operands(vec[1],0)));
+        args.push_back(parse_vector(find_operands(vec[2],0)));
         return Statement(OR, args);
     } else if (!vec[0].compare("->")) {
-        args.push_back(parse_string(vec[1]));
-        args.push_back(parse_string(vec[2]));
+        args.push_back(parse_vector(find_operands(vec[1],0)));
+        args.push_back(parse_vector(find_operands(vec[2],0)));
         return Statement(IFT, args);
     } else if (!vec[0].compare("IFF") ||
                !vec[0].compare("<->")) {
-        args.push_back(parse_string(vec[1]));
-        args.push_back(parse_string(vec[2]));
+        args.push_back(parse_vector(find_operands(vec[1],0)));
+        args.push_back(parse_vector(find_operands(vec[2],0)));
         return Statement(IFF, args);
     }
     std::cout << "Encountered unexpected token \"" << vec[0] << "\"\n";
