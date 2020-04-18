@@ -5,6 +5,7 @@
 
 #include "validate.h"
 #include "statement.h"
+#include "table.h"
 using namespace logicians;
 using namespace std;
 
@@ -34,6 +35,8 @@ int main()
     cin.ignore();
 	if (choice=="1")
 	{
+        // TODO: Finish integrating `export_table`
+
 		vector<string> tempCol;
 		vector<vector<string>> table;
 	
@@ -86,8 +89,8 @@ int main()
             getline(cin, choice);
             switch(choice[0]) {
                 case '0': break;
-                case '1': stm.transform(DeMORGANS); break;
-                case '2': stm.transform(CANCEL_NOTS); break;
+                case '1': stm.transform(Statement::DeMORGANS); break;
+                case '2': stm.transform(Statement::CANCEL_NOTS); break;
                 default : cout << "Invalid choice\n";
             }
             if (choice[0] != '0')
