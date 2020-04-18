@@ -277,6 +277,13 @@ bool is_valid_statement(const std::string& stm) {
             }
             i++;
         }
+
+        if (expecting == OPERATOR) {
+            // We good
+        } else {
+            is_valid = false;
+            display_err("expected OPERAND for operator", stm, i);
+        }
     } else {
         std::cout << "Encountered unexpected nothingness at all positions";
         is_valid = false;
