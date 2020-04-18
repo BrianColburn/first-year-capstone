@@ -3,6 +3,9 @@ default: main
 main: main.cpp validate.o statement.o
 	g++ -std=c++11 main.cpp validate.o statement.o -o logicians-main
 
+repl: repl.cpp validate.o statement.o
+	g++ -std=c++11 repl.cpp validate.o statement.o -o ldsl
+
 tests_debug: tests.cpp validate.o statement.o
 	g++ -std=c++11 tests.cpp statement.o validate.o -o tests -DDEBUG_VALIDATE
 
