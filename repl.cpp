@@ -83,7 +83,7 @@ std::string read_identifier(const std::string& expr, int i) {
 }
 
 std::string read_command(const std::string& expr, int i) {
-    int ident_end = expr.find(" ", i);
+    int ident_end = expr.find_first_of(" )", i);
     return expr.substr(i,ident_end - i);
 }
 
@@ -93,7 +93,8 @@ std::vector<std::string> split_args(const std::string& expr, int arg_start, int 
     std::string tmp;
     int ix = 0;
     while (ix <= arg_length) { // -1 for the ')'
-        if (expr[arg_start + ix] == ' ' || expr[arg_start + ix] == ')') {
+        int pos = arg_start + ix;
+        if (expr[pos] == ' ' || expr[pos] == ')') {
             if (tmp == "") {
                 // ignore spaces
             } else {
@@ -102,12 +103,31 @@ std::vector<std::string> split_args(const std::string& expr, int arg_start, int 
                 tmp = "";
             }
             ix++;
-        } else if (expr[arg_start + ix] == '(') { // encountered an s-expression
+        } else if (expr[pos] == '(') { // encountered an s-expression
             int length = find_close_paren(expr, arg_start + ix);
-            args.push_back(expr.substr(arg_start + ix, length + 2));
+            args.push_back(expr.substr(pos, length + 2));
             ix += length + 2;
+        } else if (expr[pos] == '"') {
+            do {
+                ix++;
+                pos++;
+                if (expr[pos] == '\\') {
+                    tmp += '\\';
+                    ix++;
+                    pos++;
+                    tmp += expr[pos];
+                    ix++;
+                    pos++;
+                } else if (expr[pos] != '"') {
+                    tmp += expr[pos];
+                }
+            } while (expr[pos] != '"');
+
+            args.push_back(tmp);
+            tmp = "";
+            ix++;
         } else {
-            tmp += expr[arg_start + ix];
+            tmp += expr[pos];
             ix++;
         }
     }
@@ -122,7 +142,7 @@ std::vector<std::string> split_args(const std::string& expr, int arg_start, int 
     return args;
 }
 
-bool substitute_vars(std::string& stm, std::map<std::string, std::string> vars) {
+bool substitute_vars(std::string& stm, std::map<std::string, std::string> vars, std::map<std::string, std::string> flags) {
     for (int sub_var_pos = stm.find("$");
              sub_var_pos != std::string::npos;
              sub_var_pos = stm.find("$")) {
@@ -136,52 +156,64 @@ bool substitute_vars(std::string& stm, std::map<std::string, std::string> vars) 
         }
 
         std::string sub_var_value = vars[sub_var_name];
-        /*std::cout << "Replacing \"" << var_value.substr(sub_var_pos,sub_var_len)
-                  << "\" with \"" << sub_var_value
-                  << "\" in expression \"" << var_value << "\"\n";*/
+        if (flags["--debug"] == "true") {
+            std::cout << "Replacing \"" << stm.substr(sub_var_pos,sub_var_len)
+                      << "\" with \"" << sub_var_value
+                      << "\" in expression \"" << stm << "\"\n";
+        }
         stm.replace(sub_var_pos, sub_var_len,"("+sub_var_value+")");
-        //std::cout << "Result: " << var_value << std::endl;
+        if (flags["--debug"] == "true") {
+            std::cout << "Result: " << stm << std::endl;
+        }
     }
 
     return true;
 }
 
 void ReplEnvironment::evaluate_sexpr(const std::string& to_eval, int start, int end) {
-    if (to_eval == "(exit)") {
-        std::cout << "Exiting...\n";
-        loop = false;
-        results.push_back("Evaluating \"" + to_eval + "\" returned no expression.");
-        return;
-    }
     std::string cmd = read_command(to_eval, start);
     int arg_start = start + cmd.size()+1;
     int arg_length = end - cmd.size() - 2;
     std::vector<std::string> args = split_args(to_eval, arg_start, arg_length);
-    /*std::cout << "Processing \"" << cmd << "\" (" << cmd.size() << ") with arguments \""
-              << to_eval.substr(arg_start, arg_length) << "\" (" << arg_start << ", " << arg_length << "/" << to_eval.size() << ")\n";*/
 
-    /*std::cout << "Command: " << cmd << std::endl;
-    std::cout << "Args: ";
-    for (auto s : args) std::cout << s << ", ";
-    std::cout << std::endl;*/
+    if (flags["--debug"] == "true") {
+        std::cout << "Command: " << cmd << std::endl;
+        std::cout << "Args: ";
+        for (auto s : args) std::cout << s << ", ";
+        std::cout << std::endl;
 
-    if (cmd == "defvar") {
+        if (args.size() > 0) {
+            std::cout << "Processing \"" << cmd << "\" (" << cmd.size() << ") with arguments \""
+                      << to_eval.substr(arg_start, arg_length) << "\" (" << arg_start << ", " << arg_length << "/" << to_eval.size() << ")\n";
+        } else {
+            std::cout << "Processing \"" << cmd << "\" (" << cmd.size() << ") with no arguments\n";
+        }
+    }
+
+    if (cmd == "exit") {
+        std::cout << "Exiting...\n";
+        loop = false;
+    } else if (cmd == "defvar") {
         if (args.size() == 2) {
             if (args[0][0] == '$' && args[0].find("v") == std::string::npos) {
                 std::string var_name = args[0];
                 int val_start = arg_start + var_name.size()+1;
 
-                //std::cout << "Defining \"" << var_name << "\"\n";
-                //std::cout << "with value \"" << to_eval.substr(val_start, end-val_start) << "\"\n";
+                if (flags["--debug"] == "true") {
+                    std::cout << "Defining \"" << var_name << "\"\n";
+                    std::cout << "with value \"" << to_eval.substr(val_start, end-val_start) << "\"\n";
+                }
 
                 if (args[1][0] == '(') {
                     int length = find_close_paren(to_eval, val_start);
                     //std::cout << "length = " << length << " / " << to_eval.size() << std::endl;
                     evaluate_sexpr(args[1], 1, args[1].size()-1);
-                    if (results.back()[0] != 'E') {
+
+                    std::string result = results.back();
+
+                    if (is_valid_statement(result)) {
                         vars[var_name] = results.back();
                         results.push_back(vars[var_name]);
-                        return;
                     } else {
                         std::cout << "Unable to set variable " << var_name << " to non-statement \"" << results.back() << "\"\n";
                     }
@@ -193,7 +225,6 @@ void ReplEnvironment::evaluate_sexpr(const std::string& to_eval, int start, int 
                     } else {
                         vars[var_name] = vars[sub_var_name];
                         results.push_back(vars[var_name]);
-                        return;
                     }
                 } else {
                     // bad val
@@ -210,43 +241,37 @@ void ReplEnvironment::evaluate_sexpr(const std::string& to_eval, int start, int 
     } else if (cmd == "stm") {
         std::string statement = to_eval.substr(arg_start, arg_length);
 
-        substitute_vars(statement, vars);
+        substitute_vars(statement, vars, flags);
 
         remove_spaces(statement);
         if (is_valid_statement(statement)) {
             results.push_back(parse_string(add_parentheses(statement)).to_string(ASCII));
-            return;
         } else {
             std::cout << "Unable to evaluate statement \"" << statement << "\"\n";
         }
     } else if (cmd == "with-vals") {
-        std::map<char,bool> vals;
-        int ix = arg_start;
-        while (to_eval[ix] != ' ') {
-            vals[to_eval[ix]] = to_eval[ix+1] == 'T';
-            ix += 2;
-        }
+        std::string val_defs = args[0];
+        if (val_defs.size() % 2 == 0) {
+            std::map<char,bool> vals;
+            for (int i = 0; i < val_defs.size(); i+=2) {
+                vals[val_defs[i]] = (val_defs[i+1] & 95) == 'T';
+            }
 
-        ix++;
-
-        if (to_eval[ix] == '(') {
-            int length = find_close_paren(to_eval, ix);
-            //std::cout << "length = " << length << " / " << to_eval.size() << std::endl;
-            evaluate_sexpr(to_eval, ix+1, length+1);
-        } else if (to_eval[ix] == '$') {
-            // lookup var
-            std::string sub_var_name = to_eval.substr(ix, end-ix);
-            if (vars.find(sub_var_name) == vars.end()) {
-                std::cout << "Undefined variable \"" << sub_var_name << "\"\n";
-                results.push_back("Evaluating \"" + to_eval + "\" returned no expression.");
-                return;
+            evaluate(args[1]);
+            std::string result = results.back();
+            if (result[0] == 'E') {
+                std::cout << "Encountered non-statement \"" << result << "\"\n";
             } else {
-                results.push_back(vars[sub_var_name]);
+                bool val = parse_string(results.back()).evaluate(vals);
+                if (val) {
+                    std::cout << "T\n";
+                    results.push_back("(~(t))v(t)");
+                } else {
+                    std::cout << "F\n";
+                    results.push_back("(~(f))^(f)");
+                }
             }
         }
-
-        results.push_back(parse_string(results.back()).evaluate(vals) ? "T" : "F");
-        return;
     } else if (cmd == "table") {
         std::string filename = args[0];
         std::string format = args[1];
@@ -268,58 +293,85 @@ void ReplEnvironment::evaluate_sexpr(const std::string& to_eval, int start, int 
             if (is_valid_statement(expr)) {
                 Statement stm = parse_string(add_parentheses(expr));
                 std::cout << "stm = parse_string(\"" << stm.to_string() << "\")\n";
-                std::cout << "export_table(\"" << filename << "\", " << format << ", parse_string(\"" << stm.to_string() << "\")\n";
+                if (filename == "-") {
+                    std::cout << "export_table(std::cout, " << format << ", parse_string(\"" << stm.to_string() << "\"), " << stm_format << ")\n";
+                } else {
+                    //std::ofstream file(filename, std::ofstream::out);
+                    //if (file.is_open()) {
+                        std::cout << "export_table(std::ofstream(\"" << filename << "\", std::ofstream::out), " << format << ", parse_string(\"" << stm.to_string() << "\"), " << stm_format << ")\n";
+                    //    file.close();
+                    //} else {
+                    //    std::cout << "Unable to open file \"" << filename << "\".\n";
+                    //}
+                }
                 results.push_back(stm.to_string());
-                return;
             }
         } else {
             std::cout << "Unrecognized format \"" << format << "\"\n";
         }
-   }
+    } else if (cmd == "transform") {
+        if (args.size() > 1) {
+            evaluate(args.back());
+            Statement stm = parse_string(results.back());
+            for (int i = 0; i < args.size() - 1; i++) {
+                std::string tform = args[i];
+                if (tform == "demorgans") {
+                    stm.transform(DeMORGANS);
+                } else if (tform == "cancelnots") {
+                    stm.transform(CANCEL_NOTS);
+                } else {
+                    std::cout << "Unrecognized transformation \"" << tform << "\"\n";
+                }
+            }
+            results.push_back(stm.to_string());
+        } else {
+            std::cout << "Invalid number of arguments: " << args.size() << std::endl
+                      << "Expected 2\n";
+        }
+    } else {
+        std::cout << "Invalid command \"" << cmd << "\"\n";
+    }
 
-    results.push_back("Evaluating \"" + to_eval + "\" returned no expression.");
+    //results.push_back("Evaluating \"" + to_eval + "\" returned no expression.");
 }
 
 void ReplEnvironment::evaluate(const std::string& to_eval) {
     if (to_eval[0] == '$' && to_eval.find("v") == std::string::npos) {
         if (vars.find(to_eval) != vars.end()) {
             results.push_back(vars[to_eval]);
-            return;
         } else {
             std::cout << "Undefined variable \"" << to_eval << "\"\n";
-            return;
         }
     } else if (to_eval[0] == '(') {
         int length = find_close_paren(to_eval, 0);
         //std::cout << "Matching paren found after " << length << " characters.\n";
         if (length == -1) {
             std::cout << "Incomplete s-expression: \"" << to_eval << "\"\n";
-            results.push_back("Evaluating \"" + to_eval + "\" returned no expression.");
+            //results.push_back("Evaluating \"" + to_eval + "\" returned no expression.");
         } else {
             evaluate_sexpr(to_eval, 1, 1+length);
         }
-        return;
-    }
-
-    std::vector<std::string> lexemes;
-    for (int i = 0, lastspace = 0; i < to_eval.size(); i++) {
-        if (to_eval[i] == ' ') {
-            lexemes.push_back(to_eval.substr(lastspace, i-lastspace));
-            lastspace = i+1;
-        } else if (i+1 == to_eval.size()) {
-            lexemes.push_back(to_eval.substr(lastspace));
+    } else if (to_eval[0] == '/') {
+        // comments
+    } else if (to_eval[0] == ':') {
+        if (to_eval == ":flags") {
+            for (auto flag : flags)
+                std::cout << flag.first << "=" << flag.second << std::endl;
+        } else {
+            if (to_eval.find("=") == std::string::npos) {
+                flags["--" + to_eval.substr(1)] = "true";
+            } else {
+                int epos = to_eval.find("=");
+                flags["--" + to_eval.substr(1,epos-1)] = to_eval.substr(epos+1);
+            }
         }
     }
 
-    for (int i = 0; i < lexemes.size(); i++) {
-        std::string lex = lexemes[i];
-        //std::cout << lex << std::endl;
-    }
-    results.push_back("Evaluating \"" + to_eval + "\" returned no expression.");
 }
 
 void ReplEnvironment::print() const {
-    std::cout << results.back() << std::endl;
+    if (results.size() > 0)
+        std::cout << results.back() << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -392,7 +444,7 @@ int main(int argc, char* argv[]) {
         for (int i = 4; i < args.size(); i++)
             expr += args[i];
 
-        std::string sexpr = "(table " + filename + " " + format + " (stm " + expr + "))";
+        std::string sexpr = "(table \"" + filename + "\" " + format + " (stm " + expr + "))";
         std::cout << "s-expression: " << sexpr << std::endl;
 
         renv.evaluate(sexpr);
