@@ -44,6 +44,23 @@ void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm
         case HTML:
             {
                 // Brandon
+                os << "<!DOCTYPE html><html><body>\n";
+
+                for(int row = 0; row < table_data.size(); row++)
+                {
+                    os << "   <tr>\n";
+                    for(int col = 0; col < table_data[row].size(); col++)
+                    {
+                        if (col == 0)
+                            os << "      <th>" << table_header[row] << "</th>\n";
+                        else
+                            os << "      <td>" << table_data[row][col] << "</td>\n";
+                    }
+                    os << "   </tr>\n";
+                }
+
+                os << "</body></html>";
+
                 break;
             }
         default:
