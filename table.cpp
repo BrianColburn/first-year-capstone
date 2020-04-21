@@ -39,20 +39,32 @@ void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm
     switch (tfmt) {
         case TXT:
             {
-		//Xavier
-		cout << "|\t"
+		//Xavir
 		for(int i=0;i<(table_header.size());i++)
 		{
-			cout << table_header[i] << "\t|"; 
+			os << "| "<< table_header[i] << " "; 
 		}
-		for(int row=0;row<(table_data.size());row++)
-		{	
-			cout << "\n|\t";
-			for(int col=0;col<(table_data.size());col++)
-			{
-				cout << table_data[row][col] << "\t|";
+		os << "|\n|";
+		os << string(table_header[0].size()+2, '-');
+		if (table_header.size() > 1)
+		{
+			for(int i=1;i<(table_header.size());i++)
+               		{
+			os << "+";
+			os << string(table_header[i].size()+2,'-');
 			}
 		}
+		os << "|";
+		for(int row=0;row<(table_data.size());row++)
+		{	
+			os << "\n";
+			for(int col=0;col<(table_header.size());col++)
+			{
+				os << "| " << string(table_header[col].size()/2, ' ') << table_data[row][col] << string(table_header[col].size()/2, ' ') << " ";
+			}
+		os << "|";
+		}
+		os << "\n\n";
 		break;
             }
         case HTML:
