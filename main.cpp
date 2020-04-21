@@ -9,12 +9,23 @@
 using namespace logicians;
 using namespace std;
 
-//------------------
-//html output functions
-void exportHTML(vector<vector<string>>);
-string setup();
-string closeup();
-//------------------
+
+Statement prompt_expression() {
+    string input;
+    cout << "Please enter a logical expression: ";
+    getline(cin, input);
+    remove_spaces(input);
+
+    while (!is_valid_statement(input)) {
+        cout << "Please enter a logical expression: ";
+        getline(cin, input);
+        remove_spaces(input);
+    }
+
+    return parse_string(add_parentheses(input));
+}
+
+
 
 int main()
 {
@@ -36,49 +47,50 @@ int main()
 	if (choice=="1")
 	{
         // TODO: Finish integrating `export_table`
+        Statement stm = prompt_expression();
+        string filename;
+        TableFormat table_fmt;
 
-		vector<string> tempCol;
-		vector<vector<string>> table;
-	
-		for(int i = 0; i < 25; i++)//fill table
-		{
-			for(int j = 0; j < 12; j++)
-			{
-				if(j % 2 == 0)
-					tempCol.push_back("T");
-				else
-					tempCol.push_back("F");
-			}
-			table.push_back(tempCol);
-			tempCol.clear();
-		}	
-	
-		for(int i = 0; i < 25; i++)//check contents of table
-		{
-			for(int j = 0; j < 12; j++)
-			{
-				cout << table[i][j] << "   ";
-			}
-		
-			cout << endl;
-		}	
-	
-		exportHTML(table);
-        cout << "Created a test table in html, check this file's directory.\n";
+        cout << "Please enter the file to output to: ";
+        getline(cin, filename);
+        if (filename == "-") {
+        } else if (filename.substr(filename.size()-4) == ".txt") {
+            table_fmt = TXT;
+        } else if (filename.substr(filename.size()-5) == ".html") {
+            table_fmt = HTML;
+        } else {
+            do {
+                cout << "Please select the output format:\n"
+                     << "1. Plaintext\n"
+                     << "2. HTML + CSS\n"
+                     << ">> ";
+                getline(cin, choice);
+                switch (choice[0]) {
+                    case '1': table_fmt = TXT; break;
+                    case '2': table_fmt = HTML; break;
+                    default: cout << "Invalid choice \"" << choice << "\"\n";
+                }
+            } while (choice[0] != '1' && choice[0] != '2');
+        }
+
+        //cout << "Using format " << table_fmt << "\n";
+
+        if (filename == "-") {
+                export_table(cout, TXT, stm, Statement::ASCII);
+        } else {
+            ofstream fout(filename);
+            if (fout.is_open()) {
+                export_table(fout, table_fmt, stm, Statement::ASCII);
+                fout.close();
+            }
+            else
+                cout << "Error opening \"" << filename << "\"\n";
+        }
 	}
 	else
 	{
-        cout << "Please enter a logical expression: ";
-        getline(cin, choice);
-        remove_spaces(choice);
 
-        while (!is_valid_statement(choice)) {
-            cout << "Please enter a logical expression: ";
-            getline(cin, choice);
-            remove_spaces(choice);
-        }
-
-        Statement stm = parse_string(add_parentheses(choice));
+        Statement stm = prompt_expression();
 
         do {
             cout << "Please select from the following:\n"
@@ -99,53 +111,3 @@ int main()
     }
 }
 
-void exportHTML(vector<vector<string>> table)
-{
-	ofstream output("html-export-test.html");
-	
-	output << setup(); //first part of html
-	
-	output << "<table style=\"width:100%\">\n"; //table
-	
-	for(int r = 0; r < table.size(); r++)
-	{
-		output << "   <tr>\n";
-		for(int c = 0; c < table[r].size(); c++)
-		{
-            // The first row will hold your Table Headers, and thus uses "TH".
-            // Every row after that will hold Table Data, hence "TD".
-            // ie: for "p^q", you'd have to headers {"p", "q", "p^q"}
-            // and the data {{0,0,0},{1,0,0},{0,1,0},{1,1,1}}
-            // You can convert statements to strings by calling "Statement::to_string()".
-            if (r == 0) {
-                output << "      <th>" << table[r][c] << "</th>\n";
-            } else {
-                output << "      <td>" << table[r][c] << "</td>\n";
-            }
-		}
-		output << "   </tr>\n";
-	}
-	
-	output << "   </table>";
-	
-	output << closeup(); //last part of html
-	
-	output.close();
-}
-
-string setup()
-{
-	return 
-        "<!DOCTYPE html>"
-        "<html>"
-        "<head>"
-        "<body>";
-}
-
-string closeup()
-{	
-	return
-        "</body>"
-        ""
-        "</html>";
-}

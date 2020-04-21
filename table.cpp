@@ -27,6 +27,7 @@ void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm
         vector<string> row;
         for (Statement s : sub_expressions)
             row.push_back(s.evaluate(vals) ? "T" : "F");
+        table_data.push_back(row);
     }
 
     // table_header = { "p", "q", "pvq"}
@@ -44,22 +45,25 @@ void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm
         case HTML:
             {
                 // Brandon
-                os << "<!DOCTYPE html><html><body>\n";
+                os << "<!DOCTYPE html><html><body><table>\n";
+
+                for (int col = 0; col < table_header.size(); col++) {
+                    os << "      <th>" << table_header[col] << "</th>";
+                }
+
+                os << '\n';
 
                 for(int row = 0; row < table_data.size(); row++)
                 {
                     os << "   <tr>\n";
-                    for(int col = 0; col < table_data[row].size(); col++)
+                    for(int col = 0; col < table_header.size(); col++)
                     {
-                        if (col == 0)
-                            os << "      <th>" << table_header[row] << "</th>\n";
-                        else
-                            os << "      <td>" << table_data[row][col] << "</td>\n";
+                        os << "      <td>" << table_data[row][col] << "</td>\n";
                     }
                     os << "   </tr>\n";
                 }
 
-                os << "</body></html>";
+                os << "</table></body></html>\n";
 
                 break;
             }
@@ -69,6 +73,8 @@ void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm
                 break;
             }
     }
+
+    flush(os);
 }
 
 };
