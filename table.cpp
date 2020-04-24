@@ -70,25 +70,36 @@ void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm
         case HTML:
             {
                 // Brandon
-                os << "<!DOCTYPE html><html><body><table>\n";
+                os << "<!DOCTYPE html><html><head>\n";
 
+                string table_css = ".logicians-table {}";
+                string header_css = ".logicians-table-header {}";
+                string data_css = ".logicians-table-data {}";
+                os << "    <style>\n"
+                   << string(8,' ') << table_css << endl
+                   << string(8,' ') << header_css << endl
+                   << string(8,' ') << data_css << endl
+                   << "    </style>\n";
+
+                os << "</head><body>\n<table class=\"logicians-table\">\n";
+
+                os << "    <tr class=\"logicians-table-header-row\">\n";
                 for (int col = 0; col < table_header.size(); col++) {
-                    os << "      <th>" << table_header[col] << "</th>";
+                    os << "        <th class=\"logicians-table logicians-table-header\">" << table_header[col] << "</th>\n";
                 }
-
-                os << '\n';
+                os << "    </tr>\n";
 
                 for(int row = 0; row < table_data.size(); row++)
                 {
-                    os << "   <tr>\n";
+                    os << "    <tr class=\"logicians-table-data-row\">\n";
                     for(int col = 0; col < table_header.size(); col++)
                     {
-                        os << "      <td>" << table_data[row][col] << "</td>\n";
+                        os << "      <td class=\"logicians-table-data\">" << table_data[row][col] << "</td>\n";
                     }
-                    os << "   </tr>\n";
+                    os << "    </tr>\n";
                 }
 
-                os << "</table></body></html>\n";
+                os << "</table>\n</body></html>\n";
 
                 break;
             }
