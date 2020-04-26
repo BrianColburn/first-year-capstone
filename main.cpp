@@ -25,27 +25,36 @@ Statement prompt_expression() {
     return parse_string(add_parentheses(input));
 }
 
+const string MENU = "1) Create a Truth Table\n"
+                    "2) Transform an Expression\n"
+                    "3) Help\n"
+                    "4) About\n"
+                    "5) Exit\n";
 
 
-int main()
+bool prompt_menu()
 {
-	string choice;
-	cout <<"What would you like to do?"<<endl
-		 <<"Type"<<endl
-		 <<"\"1\"to create a table."<<endl
-		 <<"\"2\" to transform an expression."<<endl;
-	cin>>choice;
-	while (choice !="1"&&choice !="2")
-	{
-		cout <<"Invalid choice. Please try again."<<endl
-			 <<"Type"<<endl
-			 <<"\"1\"to create a table."<<endl
-			 <<"\"2\" to transform an expression."<<endl;
-		cin >> choice;
-	}
+    string choice;
+
+    cout << "What would you like to do?" << endl
+         << "Type" << endl
+         << MENU
+         << ">> ";
+    cin>>choice;
+    while (choice != "1" &&
+           choice != "2" &&
+           choice != "3" &&
+           choice != "4" &&
+           choice != "5")
+    {
+        cout << "Invalid choice. Please try again." << endl
+             << MENU
+             << ">> ";
+        cin >> choice;
+    }
     cin.ignore();
-	if (choice=="1")
-	{
+    if (choice=="1")
+    {
         // TODO: Finish integrating `export_table`
         Statement stm = prompt_expression();
         string filename;
@@ -86,9 +95,10 @@ int main()
             else
                 cout << "Error opening \"" << filename << "\"\n";
         }
-	}
-	else
-	{
+    }
+
+    else if (choice == "2")
+    {
 
         Statement stm = prompt_expression();
 
@@ -109,5 +119,62 @@ int main()
                 cout << "Expression is currently: \"" << stm.to_string() << "\"\n";
         } while (choice[0] != '0');
     }
+
+    else if (choice == "3")
+    {
+        cout << "Logical expressions can be entered according to the following rules:\n"
+             << "  A variable is any lowercase letter except 'v'\n"
+             << "  Negation is denoted with '~', the tilde character\n"
+             << "  Conjunction is denoted as \"p OP q\",\n"
+             << "    where 'p' and 'q' are logical expressions,\n"
+             << "    and \"OP\" is one of {\"AND\", '^', '&'}\n"
+             << "  Disjunction is denoted as \"p OP q\",\n"
+             << "    where 'p' and 'q' are logical expressions,\n"
+             << "    and \"OP\" is one of {\"OR\", 'V', 'v', \"&&\"}\n"
+             << "  Implication is denoted as \"p -> q\"\n"
+             << "    where 'p' and 'q' are logical expressions,\n"
+             << "  Equivalence is denoted as \"p OP q\",\n"
+             << "    where 'p' and 'q' are logical expressions,\n"
+             << "    and \"OP\" is one of {\"IFF\", \"<->\"}\n"
+             << "\n"
+             << "Expressions can be nested using parentheses.\n"
+             << "Examples:\n"
+             << "  p AND q\n"
+             << "  pANDq\n"
+             << "  (p)AND(q)\n"
+             << "  p^q v r -> s <-> s v ~(r v q^p)\n"
+             << "\n"
+             << "press any key to return to the menu...";
+        getline(cin, choice);
+    }
+
+    else if (choice == "4")
+    {
+        cout << "This program was commissioned by Dr. Matt Tedrow of Texas A&M University - Corpus Christi.\n"
+             << "\n"
+             << "The following students fulfilled the commission, as their First-Year Capstone Project, under the supervision of Dr. Rita Sperry.\n"
+             << "Brandon Garcia\n"
+             << "Brian Colburn\n"
+             << "Mark Thompson\n"
+             << "Xavier Linares\n"
+             << "\n"
+             << "\n"
+             << "This application is copyrighted under the MIT license and the source code can be found on GitHub at\n"
+             << "  https://github.com/BrianColburn/first-year-capstone"
+             << "\n"
+             << "press any key to return to the menu...";
+        getline(cin, choice);
+    }
+
+    else if (choice == "5")
+      return false;
+
+    return true;
 }
 
+int main()
+{
+    while (prompt_menu());
+
+    return 0;
+}
