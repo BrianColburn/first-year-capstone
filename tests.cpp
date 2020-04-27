@@ -36,9 +36,9 @@ void test_statements(std::string stm) {
         std::cout << s << ", ";
     std::cout << std::endl;
     std::cout << "Statement size: " << size << " bytes\n";
-    statement.transform(DeMORGANS);
+    statement.transform(Statement::DeMORGANS);
     std::cout << "DeMorgan'd: \"" << statement << "\"\n";
-    statement.transform(CANCEL_NOTS);
+    statement.transform(Statement::CANCEL_NOTS);
     std::cout << "Simplified: \"" << statement << "\"\n";
     std::cout << "\n\n";
 }

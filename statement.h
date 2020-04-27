@@ -23,40 +23,41 @@ namespace logicians {
 
 IF_DSC(int calls;)
 
-/** The operator applied by an expression.
- */
-enum Operator {
-    VAR, /**< The expression is a variable. */
-    NOT, /**< The expression is the negation of another expression. */
-    AND, /**< The expression is the conjunction of two expressions. */
-    OR,  /**< The expression is the disjunction of two expressions. */
-    IFT, /**< One expression implies the other. */
-    IFF  /**< Two expressions are equivalent. */
-};
-
-/** The output format for Statement::to_string(const StringType&).
- */
-enum StringType {
-    ASCII,    /**< The string format is ASCII/plaintext. */
-    UNICODE,  /**< The string format uses some unicode characters (math symbols and such). */
-    MATH_JAX, /**< The string format uses mathjax syntax. */
-    TEX       /**< The string format uses LaTeX syntax. */
-};
-
-/** The supported statement transformations
- */
-enum Transformation {
-    DeMORGANS,  /**< p^q -> ~pv~q, pvq -> ~p^~q. */
-    CANCEL_NOTS /**< ~~p -> p. */
-};
-
 /** A class that represents boolean expressions.
  * Statement provides functionality for storing, manipulating,
  *   and displaying boolean expressions.
  */
 class Statement {
+    public:
+        /** The operator applied by an expression.
+         */
+        enum Operator {
+            VAR, /**< The expression is a variable. */
+            NOT, /**< The expression is the negation of another expression. */
+            AND, /**< The expression is the conjunction of two expressions. */
+            OR,  /**< The expression is the disjunction of two expressions. */
+            IFT, /**< One expression implies the other. */
+            IFF  /**< Two expressions are equivalent. */
+        };
+
+        /** The output format for Statement::to_string(const StringType&).
+         */
+        enum StringType {
+            ASCII,    /**< The string format is ASCII/plaintext. */
+            UNICODE,  /**< The string format uses some unicode characters (math symbols and such). */
+            MATH_JAX, /**< The string format uses mathjax syntax. */
+            TEX       /**< The string format uses LaTeX syntax. */
+        };
+
+        /** The supported statement transformations
+         */
+        enum Transformation {
+            DeMORGANS,  /**< p^q -> ~pv~q, pvq -> ~p^~q. */
+            CANCEL_NOTS /**< ~~p -> p. */
+        };
+
     private:
-        Operator type; /**< The top-level operater of this expression */
+        Statement::Operator type; /**< The top-level operater of this expression */
         char var; /**< The character used to represent this variable */
         std::vector<Statement> operands; /**< The operands this operator is applied to */
         std::vector<Statement> _collect_expressions() const; /**< Helper method for collecting expressions */
@@ -65,7 +66,7 @@ class Statement {
         Statement operator+(const Statement& stm) const;
 
     public:
-        /** Construct a statement containing a single variable.
+       /** Construct a statement containing a single variable.
          * @param c the character that represents the variable
          * \par Complexity
          *   Time: O(1) \n
