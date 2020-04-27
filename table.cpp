@@ -79,6 +79,8 @@ void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm
 								"text-align: center;"
 								"font-family: serif;"
 								"border-bottom: 3px solid #1a1a1a;"
+								"border-left: 3px solid #1a1a1a;"
+								"border-right: 3px solid #1a1a1a;"
 								"border-top: 3px solid #1a1a1a;}";
                  string data_css = ".logicians-table-data {"
 								"font-size: 16px;"
