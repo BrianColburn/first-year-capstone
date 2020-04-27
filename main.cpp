@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <filesystem>
 
 #include "validate.h"
 #include "statement.h"
@@ -57,15 +58,17 @@ bool prompt_menu()
     {
         // TODO: Finish integrating `export_table`
         Statement stm = prompt_expression();
-        string filename;
+        filesystem::path filename = filesystem::current_path();
         TableFormat table_fmt;
 
         cout << "Please enter the file to output to: ";
-        getline(cin, filename);
-        if (filename == "-") {
-        } else if (filename.substr(filename.size()-4) == ".txt") {
+        getline(cin, choice);
+        filename /= choice;
+
+        if (choice == "-") {
+        } else if (filename.extension() == ".txt") {
             table_fmt = TXT;
-        } else if (filename.substr(filename.size()-5) == ".html") {
+        } else if (filename.extension() == ".html") {
             table_fmt = HTML;
         } else {
             do {
@@ -75,8 +78,8 @@ bool prompt_menu()
                      << ">> ";
                 getline(cin, choice);
                 switch (choice[0]) {
-                    case '1': table_fmt = TXT; break;
-                    case '2': table_fmt = HTML; break;
+                    case '1': table_fmt = TXT; filename += ".txt"; break;
+                    case '2': table_fmt = HTML; filename += ".html"; break;
                     default: cout << "Invalid choice \"" << choice << "\"\n";
                 }
             } while (choice[0] != '1' && choice[0] != '2');
@@ -91,6 +94,10 @@ bool prompt_menu()
             if (fout.is_open()) {
                 export_table(fout, table_fmt, stm, Statement::ASCII);
                 fout.close();
+                cout << "The table was saved to "
+                     << filename << endl
+                     << "press any key to return to the menu...";
+                getline(cin, choice);
             }
             else
                 cout << "Error opening \"" << filename << "\"\n";
@@ -167,7 +174,8 @@ bool prompt_menu()
     }
 
     else if (choice == "5")
-      return false;
+        return false;
+
 
     return true;
 }
