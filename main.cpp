@@ -2,7 +2,10 @@
 #include <string>
 #include <fstream>
 #include <vector>
+
+#if (__cplusplus >= 201703L)
 #include <filesystem>
+#endif
 
 #include "validate.h"
 #include "statement.h"
@@ -56,13 +59,14 @@ bool prompt_menu()
     cin.ignore();
     if (choice=="1")
     {
-        // TODO: Finish integrating `export_table`
         Statement stm = prompt_expression();
-        filesystem::path filename = filesystem::current_path();
         TableFormat table_fmt;
-
         cout << "Please enter the file to output to: ";
         getline(cin, choice);
+
+    #if (__cplusplus >= 201703L)
+        filesystem::path filename = filesystem::current_path();
+
         filename /= choice;
 
         if (choice == "-") {
@@ -102,6 +106,43 @@ bool prompt_menu()
             else
                 cout << "Error opening \"" << filename << "\"\n";
         }
+    #else
+        string filename = choice;
+
+        if (filename == "-") {
+        } else if (filename.size() >= 4 && filename.substr(filename.size()-4) == ".txt") {
+            table_fmt = TXT;
+        } else if (filename.size() >= 5 && filename.substr(filename.size()-5) == ".html") {
+            table_fmt = HTML;
+        } else {
+            do {
+                cout << "Please select the output format:\n"
+                     << "1. Plaintext\n"
+                     << "2. HTML + CSS\n"
+                     << ">> ";
+                getline(cin, choice);
+                switch (choice[0]) {
+                    case '1': table_fmt = TXT; filename += ".txt"; break;
+                    case '2': table_fmt = HTML; filename += ".html"; break;
+                    default: cout << "Invalid choice \"" << choice << "\"\n";
+                }
+            } while (choice[0] != '1' && choice[0] != '2');
+        }
+
+        //cout << "Using format " << table_fmt << "\n";
+
+        if (filename == "-") {
+                export_table(cout, TXT, stm, Statement::ASCII);
+        } else {
+            ofstream fout(filename);
+            if (fout.is_open()) {
+                export_table(fout, table_fmt, stm, Statement::ASCII);
+                fout.close();
+            }
+            else
+                cout << "Error opening \"" << filename << "\"\n";
+        }
+    #endif
     }
 
     else if (choice == "2")
@@ -182,6 +223,10 @@ bool prompt_menu()
 
 int main()
 {
+    #if (__cplusplus < 201703L)
+    cout << "WARNING: This program was compiled to the C++ " << __cplusplus << " standard.\n";
+    cout << "C++17 (201703) is recommended.\n";
+    #endif
     while (prompt_menu());
 
     return 0;
