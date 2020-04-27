@@ -92,7 +92,7 @@ void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm
                    << string(8,' ') << table_css << endl
                    << string(8,' ') << header_css << endl
                    << string(8,' ') << data_css << endl
-				   << "tr:nth-child(even){background-color: #f2f2f2}" //add a second row color
+				   << ".logicians-table-data-row:nth-child(even){background-color: #f2f2f2}" //add a second row color
                    << "    </style>\n";
 
                 os << "</head><body>\n<div style=\"overflow-x:auto;\">\n<table class=\"logicians-table\">\n"; //start the table
