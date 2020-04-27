@@ -70,26 +70,40 @@ void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm
         case HTML:
             {
                 // Brandon
-                os << "<!DOCTYPE html><html><head>\n";
+                os << "<!DOCTYPE html><html><head>\n"; //start of html file
 
-                string table_css = ".logicians-table {}";
-                string header_css = ".logicians-table-header {}";
-                string data_css = ".logicians-table-data {}";
+                string table_css = ".logicians-table {border-collapse: collapse;}"; //html classes for the table
+                string header_css = ".logicians-table-header {"
+								"font-size: 25px;"
+								"color: black;"
+								"text-align: center;"
+								"font-family: serif;"
+								"border-bottom: 3px solid #1a1a1a;"
+								"border-top: 3px solid #1a1a1a;}";
+                 string data_css = ".logicians-table-data {"
+								"font-size: 16px;"
+								"color: black;"
+								"text-align: center;"
+								"padding: 7px;"
+								"border-right: 2px solid #1a1a1a;"
+								"border-left: 2px solid #1a1a1a;"
+								"font-family:serif;}";
                 os << "    <style>\n"
                    << string(8,' ') << table_css << endl
                    << string(8,' ') << header_css << endl
                    << string(8,' ') << data_css << endl
+				   << "tr:nth-child(even){background-color: #f2f2f2}" //add a second row color
                    << "    </style>\n";
 
-                os << "</head><body>\n<table class=\"logicians-table\">\n";
+                os << "</head><body>\n<div style=\"overflow-x:auto;\">\n<table class=\"logicians-table\">\n"; //start the table
 
-                os << "    <tr class=\"logicians-table-header-row\">\n";
+                os << "    <tr class=\"logicians-table-header-row\">\n"; //fill in table header
                 for (int col = 0; col < table_header.size(); col++) {
                     os << "        <th class=\"logicians-table logicians-table-header\">" << table_header[col] << "</th>\n";
                 }
                 os << "    </tr>\n";
 
-                for(int row = 0; row < table_data.size(); row++)
+                for(int row = 0; row < table_data.size(); row++) //fill in table data
                 {
                     os << "    <tr class=\"logicians-table-data-row\">\n";
                     for(int col = 0; col < table_header.size(); col++)
@@ -99,7 +113,7 @@ void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm
                     os << "    </tr>\n";
                 }
 
-                os << "</table>\n</body></html>\n";
+                os << "</table>\n</div>\n</body></html>\n"; //end the html file
 
                 break;
             }
