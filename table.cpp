@@ -19,7 +19,7 @@ void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm
     vector<Statement> sub_expressions = stm.collect_expressions_ordered();
     for (Statement s : sub_expressions)
         table_header.push_back(s.to_string(sfmt));
-    
+
     vector<vector<string>> table_data;
     vector<map<char, bool>> val_permutations = generate_vals(stm);
     for (map<char, bool> vals : val_permutations)
@@ -42,7 +42,7 @@ void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm
 		//Xavir
 		for(int i=0;i<(table_header.size());i++)
 		{
-			os << "| "<< table_header[i] << " "; 
+			os << "| "<< table_header[i] << " ";
 		}
 		os << "|\n|";
 		os << string(table_header[0].size()+2, '-');
@@ -56,11 +56,11 @@ void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm
 		}
 		os << "|";
 		for(int row=0;row<(table_data.size());row++)
-		{	
+		{
 			os << "\n";
 			for(int col=0;col<(table_header.size());col++)
 			{
-				os << "| " << string(table_header[col].size()/2, ' ') << table_data[row][col] << string(table_header[col].size()/2, ' ') << " ";
+              os << "| " << string((table_header[col].size() % 2 ? table_header[col].size() : table_header[col].size() - 1)/2, ' ') << table_data[row][col] << string(table_header[col].size()/2, ' ') << " ";
 			}
 		os << "|";
 		}
