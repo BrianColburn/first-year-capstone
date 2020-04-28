@@ -432,7 +432,8 @@ int main(int argc, char* argv[]) {
             expr += args[i];
 
         std::string sexpr = "(table \"" + filename + "\" " + format + " (stm " + expr + "))";
-        std::cout << "s-expression: " << sexpr << std::endl;
+        if (flags["--debug"] == "true")
+            std::cout << "s-expression: " << sexpr << std::endl;
 
         renv.evaluate(sexpr);
     }
