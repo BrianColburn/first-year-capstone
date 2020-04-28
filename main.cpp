@@ -3,10 +3,6 @@
 #include <fstream>
 #include <vector>
 
-#if (__cplusplus >= 201703L)
-#include <filesystem>
-#endif
-
 #include "validate.h"
 #include "statement.h"
 #include "table.h"
@@ -29,6 +25,118 @@ Statement prompt_expression() {
     return parse_string(add_parentheses(input));
 }
 
+
+/** This is a bit of a messy hack for the school servers.
+ * Ideally, we could use C++17, however Riddler has GCC 4.8.
+ * Thus, the two different versions of table exporting.
+ * I'm not going to try supporting lower than C++11.
+ */
+#if (__cplusplus >= 201703L)
+    #include <filesystem>
+
+    void export_table_macro() {
+        Statement stm = prompt_expression();
+        TableFormat table_fmt;
+        string tmp_string;
+        filesystem::path filename = filesystem::current_path();
+
+        cout << "Please enter the file to output to: ";
+        getline(cin, tmp_string);
+
+        filename /= tmp_string;
+
+        if (tmp_string == "-") {
+        } else if (filename.extension() == ".txt") {
+            table_fmt = TXT;
+        } else if (filename.extension() == ".html") {
+            table_fmt = HTML;
+        } else {
+            do {
+                cout << "Please select the output format:\n"
+                     << "1. Plaintext\n"
+                     << "2. HTML + CSS\n"
+                     << ">> ";
+                getline(cin, tmp_string);
+                switch (tmp_string[0]) {
+                    case '1': table_fmt = TXT; filename += ".txt"; break;
+                    case '2': table_fmt = HTML; filename += ".html"; break;
+                    default: cout << "Invalid choice \"" << tmp_string << "\"\n";
+                }
+            } while (tmp_string[0] != '1' && tmp_string[0] != '2');
+        }
+
+        if (filename.filename() == "-") {
+                export_table(cout, TXT, stm, Statement::ASCII);
+        } else {
+            ofstream fout(filename);
+            if (fout.is_open()) {
+                export_table(fout, table_fmt, stm, Statement::ASCII);
+                fout.close();
+                cout << "The table was saved to "
+                     << filename << endl
+                     << "press enter to return to the menu...";
+                getline(cin, tmp_string);
+            }
+            else
+                cout << "Error opening \"" << filename << "\"\n";
+        }
+    }
+
+#elif (__cplusplus >= 201103L)
+
+    void export_table_macro() {
+        Statement stm = prompt_expression();
+        TableFormat table_fmt;
+        string tmp_string;
+        string filename;
+
+        cout << "Please enter the file to output to: ";
+        getline(cin, tmp_string);
+
+        filename = tmp_string;
+
+        if (filename == "-") {
+        } else if (filename.size() >= 4 && filename.substr(filename.size()-4) == ".txt") {
+            table_fmt = TXT;
+        } else if (filename.size() >= 5 && filename.substr(filename.size()-5) == ".html") {
+            table_fmt = HTML;
+        } else {
+            do {
+                cout << "Please select the output format:\n"
+                     << "1. Plaintext\n"
+                     << "2. HTML + CSS\n"
+                     << ">> ";
+                getline(cin, tmp_string);
+                switch (tmp_string[0]) {
+                    case '1': table_fmt = TXT; filename += ".txt"; break;
+                    case '2': table_fmt = HTML; filename += ".html"; break;
+                    default: cout << "Invalid choice \"" << tmp_string << "\"\n";
+                }
+            } while (tmp_string[0] != '1' && tmp_string[0] != '2');
+        }
+
+        if (filename == "-") {
+                export_table(cout, TXT, stm, Statement::ASCII);
+        } else {
+            ofstream fout(filename);
+            if (fout.is_open()) {
+                export_table(fout, table_fmt, stm, Statement::ASCII);
+                fout.close();
+                cout << "The table was saved to \"" << filename << "\""
+                     << "press enter to return to the menu...";
+                getline(cin, tmp_string);
+            }
+            else
+                cout << "Error opening \"" << filename << "\"\n";
+        }
+    }
+
+#else
+
+/* Key parts require >= C++11 */ struct {int: -1};
+
+#endif
+
 const string MENU = "1) Create a Truth Table\n"
                     "2) Transform an Expression\n"
                     "3) Help\n"
@@ -41,7 +149,6 @@ bool prompt_menu()
     string choice;
 
     cout << "What would you like to do?" << endl
-         << "Type" << endl
          << MENU
          << ">> ";
     cin>>choice;
@@ -57,92 +164,10 @@ bool prompt_menu()
         cin >> choice;
     }
     cin.ignore();
+
     if (choice=="1")
     {
-        Statement stm = prompt_expression();
-        TableFormat table_fmt;
-        cout << "Please enter the file to output to: ";
-        getline(cin, choice);
-
-    #if (__cplusplus >= 201703L)
-        filesystem::path filename = filesystem::current_path();
-
-        filename /= choice;
-
-        if (choice == "-") {
-        } else if (filename.extension() == ".txt") {
-            table_fmt = TXT;
-        } else if (filename.extension() == ".html") {
-            table_fmt = HTML;
-        } else {
-            do {
-                cout << "Please select the output format:\n"
-                     << "1. Plaintext\n"
-                     << "2. HTML + CSS\n"
-                     << ">> ";
-                getline(cin, choice);
-                switch (choice[0]) {
-                    case '1': table_fmt = TXT; filename += ".txt"; break;
-                    case '2': table_fmt = HTML; filename += ".html"; break;
-                    default: cout << "Invalid choice \"" << choice << "\"\n";
-                }
-            } while (choice[0] != '1' && choice[0] != '2');
-        }
-
-        //cout << "Using format " << table_fmt << "\n";
-
-        if (filename == "-") {
-                export_table(cout, TXT, stm, Statement::ASCII);
-        } else {
-            ofstream fout(filename);
-            if (fout.is_open()) {
-                export_table(fout, table_fmt, stm, Statement::ASCII);
-                fout.close();
-                cout << "The table was saved to "
-                     << filename << endl
-                     << "press any key to return to the menu...";
-                getline(cin, choice);
-            }
-            else
-                cout << "Error opening \"" << filename << "\"\n";
-        }
-    #else
-        string filename = choice;
-
-        if (filename == "-") {
-        } else if (filename.size() >= 4 && filename.substr(filename.size()-4) == ".txt") {
-            table_fmt = TXT;
-        } else if (filename.size() >= 5 && filename.substr(filename.size()-5) == ".html") {
-            table_fmt = HTML;
-        } else {
-            do {
-                cout << "Please select the output format:\n"
-                     << "1. Plaintext\n"
-                     << "2. HTML + CSS\n"
-                     << ">> ";
-                getline(cin, choice);
-                switch (choice[0]) {
-                    case '1': table_fmt = TXT; filename += ".txt"; break;
-                    case '2': table_fmt = HTML; filename += ".html"; break;
-                    default: cout << "Invalid choice \"" << choice << "\"\n";
-                }
-            } while (choice[0] != '1' && choice[0] != '2');
-        }
-
-        //cout << "Using format " << table_fmt << "\n";
-
-        if (filename == "-") {
-                export_table(cout, TXT, stm, Statement::ASCII);
-        } else {
-            ofstream fout(filename);
-            if (fout.is_open()) {
-                export_table(fout, table_fmt, stm, Statement::ASCII);
-                fout.close();
-            }
-            else
-                cout << "Error opening \"" << filename << "\"\n";
-        }
-    #endif
+        export_table_macro();
     }
 
     else if (choice == "2")
@@ -192,7 +217,7 @@ bool prompt_menu()
              << "  (p)AND(q)\n"
              << "  p^q v r -> s <-> s v ~(r v q^p)\n"
              << "\n"
-             << "press any key to return to the menu...";
+             << "press enter to return to the menu...";
         getline(cin, choice);
     }
 
@@ -208,10 +233,43 @@ bool prompt_menu()
              << "\n"
              << "\n"
              << "This application is copyrighted under the MIT license and the source code can be found on GitHub at\n"
-             << "  https://github.com/BrianColburn/first-year-capstone"
+             << "  https://github.com/BrianColburn/first-year-capstone\n"
+             << "This particular binary was compiled to the C++ " << __cplusplus << " standard\n"
              << "\n"
-             << "press any key to return to the menu...";
+             << "Enter 'L' to view the full license,\n"
+             << "  anything else will take you to the menu.\n"
+             << ">> ";
         getline(cin, choice);
+
+        // Ta-Da! Users don't need to keep track of a LICENSE file.
+        if ((choice[0] & 95) == 'L')
+        {
+            cout << ""
+                 << "MIT License"
+                 << "\n"
+                 << "Copyright (c) 2020 The Logicians: Brandon Garcia, Brian Colburn, Mark Thompson, Xavier Linares\n"
+                 << "\n"
+                 << "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
+                 << "of this software and associated documentation files (the \"Software\"), to deal\n"
+                 << "in the Software without restriction, including without limitation the rights\n"
+                 << "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
+                 << "copies of the Software, and to permit persons to whom the Software is\n"
+                 << "furnished to do so, subject to the following conditions:\n"
+                 << "\n"
+                 << "The above copyright notice and this permission notice shall be included in all\n"
+                 << "copies or substantial portions of the Software.\n"
+                 << "\n"
+                 << "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
+                 << "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"
+                 << "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"
+                 << "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
+                 << "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
+                 << "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"
+                 << "SOFTWARE.\n"
+                 << "\n"
+                 << "press enter to return to the menu...";
+            getline(cin, choice);
+        }
     }
 
     else if (choice == "5")
@@ -224,8 +282,8 @@ bool prompt_menu()
 int main()
 {
     #if (__cplusplus < 201703L)
-    cout << "WARNING: This program was compiled to the C++ " << __cplusplus << " standard.\n";
-    cout << "C++17 (201703) is recommended.\n";
+        cout << "WARNING: This program was compiled to the C++ " << __cplusplus << " standard.\n";
+        cout << "C++17 (201703) is recommended.\n";
     #endif
     while (prompt_menu());
 
