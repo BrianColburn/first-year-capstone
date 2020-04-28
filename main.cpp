@@ -281,10 +281,6 @@ bool prompt_menu()
 
 int main()
 {
-    #if (__cplusplus < 201703L)
-        cout << "WARNING: This program was compiled to the C++ " << __cplusplus << " standard.\n";
-        cout << "C++17 (201703) is recommended.\n";
-    #endif
     while (prompt_menu());
 
     return 0;

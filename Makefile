@@ -1,6 +1,6 @@
 default: main
 
-STD ?= c++17
+STD ?= c++11
 
 main: main.cpp validate.o statement.o table.o
 	g++ -std=$(STD) main.cpp validate.o statement.o table.o -o logicians-main
