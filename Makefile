@@ -5,8 +5,8 @@ STD ?= c++17
 main: main.cpp validate.o statement.o table.o
 	g++ -std=$(STD) main.cpp validate.o statement.o table.o -o logicians-main
 
-repl: repl.cpp validate.o statement.o
-	g++ -std=c++11 repl.cpp validate.o statement.o -o ldsl
+repl: repl.cpp validate.o statement.o table.o
+	g++ -std=$(STD) repl.cpp validate.o statement.o table.o -o ldsl
 
 tests_debug: tests.cpp validate.o statement.o
 	g++ -std=$(STD) tests.cpp statement.o validate.o -o tests -DDEBUG_VALIDATE

@@ -1,42 +1,16 @@
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <map>
 #include <vector>
 
 #include "validate.h"
 #include "statement.h"
+#include "table.h"
 #include "repl.h"
 
 using namespace logicians;
 
-void ReplInputState::move_left() {
-    if (input.begin() < pos)
-        pos--;
-}
-
-void ReplInputState::move_right() {
-    if (pos < input.end())
-        pos++;
-}
-
-void ReplInputState::insert(char c) {
-    input.insert(pos,c);
-
-    switch (c) {
-        case '(':
-            depth++;
-            break;
-        case ')':
-            depth--;
-            break;
-    }
-
-    if (depth == 0 && input.back() == '\n') {
-        input.erase(input.end()-1);
-        incomplete = false;
-    }
-    pos++;
-}
 
 ReplEnvironment::ReplEnvironment(std::map<std::string, std::string> set_flags) {
     flags = set_flags;
@@ -46,46 +20,34 @@ ReplEnvironment::ReplEnvironment(std::map<std::string, std::string> set_flags) {
     }
 }
 
+
 std::string ReplEnvironment::read() {
-    ReplInputState ris;
-    char ctmp;
+    if (std::cin.eof()) {
+        loop = false;
+        std::cout << std::endl;
+        return "";
+    }
+
+    std::string input_line;
     std::cout << "LDSL>> ";
-    getline(std::cin, ris.input);
+    getline(std::cin, input_line);
 
-    /*do {
-        ctmp = getch();
-        if (ctmp == 27) {
-            ctmp = getch();
-            if (ctmp == 91) {
-                ctmp = getch();
-                if (ctmp == 'D') {
-                    ris.move_left();
-                } else if (ctmp == 'C') {
-                    ris.move_right();
-                }
-            }
-        } else {
-            ris.insert(ctmp);
-        }
-        os << "[8G";
-        os << ris.input;
-        //os << "[" << (ris.input.end() - ris.pos - 1) << 'D';
-        flush(os);
-    } while (ris.incomplete);*/
-
-    input.push_back(ris.input);
-    return ris.input;
+    input.push_back(input_line);
+    return input.back();
 }
+
 
 std::string read_identifier(const std::string& expr, int i) {
     int ident_end = expr.find_first_not_of("abcdefghijklmnopqrstuwxyz", i+1);
     return expr.substr(i,ident_end - i);
 }
 
+
 std::string read_command(const std::string& expr, int i) {
     int ident_end = expr.find_first_of(" )", i);
     return expr.substr(i,ident_end - i);
 }
+
 
 std::vector<std::string> split_args(const std::string& expr, int arg_start, int arg_length) {
     std::vector<std::string> args;
@@ -142,6 +104,7 @@ std::vector<std::string> split_args(const std::string& expr, int arg_start, int 
     return args;
 }
 
+
 bool substitute_vars(std::string& stm, std::map<std::string, std::string> vars, std::map<std::string, std::string> flags) {
     for (int sub_var_pos = stm.find("$");
              sub_var_pos != std::string::npos;
@@ -169,6 +132,7 @@ bool substitute_vars(std::string& stm, std::map<std::string, std::string> vars, 
 
     return true;
 }
+
 
 void ReplEnvironment::evaluate_sexpr(const std::string& to_eval, int start, int end) {
     std::string cmd = read_command(to_eval, start);
@@ -209,13 +173,15 @@ void ReplEnvironment::evaluate_sexpr(const std::string& to_eval, int start, int 
                     //std::cout << "length = " << length << " / " << to_eval.size() << std::endl;
                     evaluate_sexpr(args[1], 1, args[1].size()-1);
 
-                    std::string result = results.back();
+                    if (results.size() > 0) {
+                        std::string result = results.back();
 
-                    if (is_valid_statement(result)) {
-                        vars[var_name] = results.back();
-                        results.push_back(vars[var_name]);
-                    } else {
-                        std::cout << "Unable to set variable " << var_name << " to non-statement \"" << results.back() << "\"\n";
+                        if (is_valid_statement(result)) {
+                            vars[var_name] = results.back();
+                            results.push_back(vars[var_name]);
+                        } else {
+                            std::cout << "Unable to set variable " << var_name << " to non-statement \"" << results.back() << "\"\n";
+                        }
                     }
                 } else if (args[1][0] == '$') {
                     // lookup var
@@ -235,8 +201,8 @@ void ReplEnvironment::evaluate_sexpr(const std::string& to_eval, int start, int 
                 std::cout << "Variable names must start with a '$' and cannot contain 'v'\n";
             }
         } else {
-            std::cout << "Invalid number of arguments: " << args.size() << std::endl
-                      << "Expected 2\n";
+            std::cout << "Invalid number of arguments for \"defvar\"\n"
+                      << "Expected 3, recieved " << args.size() << std::endl;
         }
     } else if (cmd == "stm") {
         std::string statement = to_eval.substr(arg_start, arg_length);
@@ -245,95 +211,114 @@ void ReplEnvironment::evaluate_sexpr(const std::string& to_eval, int start, int 
 
         remove_spaces(statement);
         if (is_valid_statement(statement)) {
-            results.push_back(parse_string(add_parentheses(statement)).to_string(ASCII));
+            results.push_back(parse_string(add_parentheses(statement)).to_string(Statement::ASCII));
         } else {
-            std::cout << "Unable to evaluate statement \"" << statement << "\"\n";
+            std::cout << "\nUnable to evaluate statement \"" << statement << "\"\n";
         }
     } else if (cmd == "with-vals") {
-        std::string val_defs = args[0];
-        if (val_defs.size() % 2 == 0) {
-            std::map<char,bool> vals;
-            for (int i = 0; i < val_defs.size(); i+=2) {
-                vals[val_defs[i]] = (val_defs[i+1] & 95) == 'T';
-            }
-
-            evaluate(args[1]);
-            std::string result = results.back();
-            if (result[0] == 'E') {
-                std::cout << "Encountered non-statement \"" << result << "\"\n";
-            } else {
-                bool val = parse_string(results.back()).evaluate(vals);
-                if (val) {
-                    std::cout << "T\n";
-                    results.push_back("(~(t))v(t)");
-                } else {
-                    std::cout << "F\n";
-                    results.push_back("(~(f))^(f)");
+        if (args.size() == 2) {
+            std::string val_defs = args[0];
+            if (val_defs.size() % 2 == 0) {
+                std::map<char,bool> vals;
+                for (int i = 0; i < val_defs.size(); i+=2) {
+                    vals[val_defs[i]] = (val_defs[i+1] & 95) == 'T';
                 }
-            }
-        }
-    } else if (cmd == "table") {
-        std::string filename = args[0];
-        std::string format = args[1];
 
-        // convert the format to uppercase
-        for (char& c : format) {
-            if ('a' <= c && c <= 'z')
-                c &= 95;
-        }
-
-        if (format == "TXT" || format == "HTML") {
-            std::cout << "Outputting a " << format << " table to \"" << filename << "\"\n";
-
-            evaluate(args.back());
-            std::string expr = results.back();
-
-            std::cout << "Input: \"" << expr << "\"\n";
-            remove_spaces(expr);
-            if (is_valid_statement(expr)) {
-                Statement stm = parse_string(add_parentheses(expr));
-                std::cout << "stm = parse_string(\"" << stm.to_string() << "\")\n";
-                if (filename == "-") {
-                    std::cout << "export_table(std::cout, " << format << ", parse_string(\"" << stm.to_string() << "\"), " << stm_format << ")\n";
-                } else {
-                    //std::ofstream file(filename, std::ofstream::out);
-                    //if (file.is_open()) {
-                        std::cout << "export_table(std::ofstream(\"" << filename << "\", std::ofstream::out), " << format << ", parse_string(\"" << stm.to_string() << "\"), " << stm_format << ")\n";
-                    //    file.close();
-                    //} else {
-                    //    std::cout << "Unable to open file \"" << filename << "\".\n";
-                    //}
+                evaluate(args[1]);
+                if (results.size() > 0) {
+                    std::string result = results.back();
+                    if (result[0] == 'E') {
+                        std::cout << "Encountered non-statement \"" << result << "\"\n";
+                    } else {
+                        bool val = parse_string(results.back()).evaluate(vals);
+                        if (val) {
+                            std::cout << "T\n";
+                            results.push_back("(~(t))v(t)");
+                        } else {
+                            std::cout << "F\n";
+                            results.push_back("(~(f))^(f)");
+                        }
+                    }
                 }
-                results.push_back(stm.to_string());
             }
         } else {
-            std::cout << "Unrecognized format \"" << format << "\"\n";
+            std::cout << "Invalid number of arguments for \"with-vals\"\n"
+                      << "Expected 2, recieved " << args.size() << std::endl;
+        }
+    } else if (cmd == "table") {
+        if (args.size() == 3) {
+            std::string filename = args[0];
+            std::string sformat = args[1];
+            TableFormat tformat;
+
+            // convert the format to uppercase
+            for (char& c : sformat) {
+                if ('a' <= c && c <= 'z')
+                    c &= 95;
+            }
+
+            if (sformat == "TXT" || sformat == "HTML") {
+                if (sformat == "TXT") {
+                    tformat = TXT;
+                } else if (sformat == "HTML") {
+                    tformat = HTML;
+                }
+
+                evaluate(args.back());
+                if (results.size() > 0) {
+                    std::string expr = results.back();
+
+                    remove_spaces(expr);
+                    if (is_valid_statement(expr)) {
+                        Statement stm = parse_string(add_parentheses(expr));
+
+                        if (filename == "-") {
+                            export_table(std::cout, tformat, stm, stm_format);
+                        } else {
+                            std::ofstream file(filename, std::ofstream::out);
+                            if (file.is_open()) {
+                                export_table(file, tformat, stm, stm_format);
+                                file.close();
+                            } else {
+                                std::cout << "Unable to open file \"" << filename << "\".\n";
+                            }
+                        }
+                        results.push_back(stm.to_string());
+                    }
+                }
+            } else {
+                std::cout << "Unrecognized format \"" << sformat << "\"\n";
+            }
+        } else {
+            std::cout << "Invalid number of arguments for \"table\"\n"
+                      << "Expected 3, recieved " << args.size() << std::endl;
         }
     } else if (cmd == "transform") {
         if (args.size() > 1) {
             evaluate(args.back());
-            Statement stm = parse_string(results.back());
-            for (int i = 0; i < args.size() - 1; i++) {
-                std::string tform = args[i];
-                if (tform == "demorgans") {
-                    stm.transform(DeMORGANS);
-                } else if (tform == "cancelnots") {
-                    stm.transform(CANCEL_NOTS);
-                } else {
-                    std::cout << "Unrecognized transformation \"" << tform << "\"\n";
+            if (results.size() > 0) {
+                Statement stm = parse_string(results.back());
+                for (int i = 0; i < args.size() - 1; i++) {
+                    std::string tform = args[i];
+                    if (tform == "demorgans") {
+                        stm.transform(Statement::DeMORGANS);
+                    } else if (tform == "cancelnots") {
+                        stm.transform(Statement::CANCEL_NOTS);
+                    } else {
+                        std::cout << "Unrecognized transformation \"" << tform << "\"\n";
+                    }
                 }
+                results.push_back(stm.to_string());
             }
-            results.push_back(stm.to_string());
         } else {
-            std::cout << "Invalid number of arguments: " << args.size() << std::endl
-                      << "Expected 2\n";
+            std::cout << "Invalid number of arguments for \"transform\"\n"
+                      << "Expected at least 2, recieved " << args.size() << std::endl;
         }
     } else {
         std::cout << "Invalid command \"" << cmd << "\"\n";
     }
-
-    //results.push_back("Evaluating \"" + to_eval + "\" returned no expression.");
 }
+
 
 void ReplEnvironment::evaluate(const std::string& to_eval) {
     if (to_eval[0] == '$' && to_eval.find("v") == std::string::npos) {
@@ -369,10 +354,12 @@ void ReplEnvironment::evaluate(const std::string& to_eval) {
 
 }
 
+
 void ReplEnvironment::print() const {
     if (results.size() > 0)
         std::cout << results.back() << std::endl;
 }
+
 
 int main(int argc, char* argv[]) {
     std::map<std::string, std::string> flags;

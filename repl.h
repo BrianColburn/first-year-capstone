@@ -8,24 +8,6 @@
 
 namespace logicians {
 
-    class ReplInputState {
-        public:
-            enum Token {
-                DEFVAR,
-                VAR,
-                STATEMENT
-            };
-            int depth = 0;
-            std::string input;
-            std::string::iterator pos = input.begin();
-            Token status;
-            bool incomplete = true;
-
-            void move_left();
-            void move_right();
-            void insert(char c);
-    };
-
     class ReplEnvironment {
         private:
             /** User created variables.
@@ -55,7 +37,7 @@ namespace logicians {
 
             std::map<std::string, std::string> flags;
 
-            StringType stm_format = ASCII;
+            Statement::StringType stm_format = Statement::ASCII;
 
         public:
             ReplEnvironment(std::map<std::string, std::string> set_flags);
