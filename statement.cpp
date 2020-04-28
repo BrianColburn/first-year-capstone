@@ -23,58 +23,58 @@ Statement::Statement(Operator op, std::vector<Statement> args) {
 }
 
 std::string Statement::to_string() const {
-    return to_string(ASCII);
+    return to_string(Statement::ASCII);
 }
 
 std::string Statement::to_string(const StringType& format) const {
     switch (type) {
-        case VAR: return std::string(1,var);
-        case NOT: {
+        case Statement::VAR: return std::string(1,var);
+        case Statement::NOT: {
             switch (format) {
-                case ASCII: case UNICODE: return "~(" + operands[0].to_string() + ")";
-                case MATH_JAX: case TEX: return "\\sim (" + operands[0].to_string() + ")";
+                case Statement::ASCII: case Statement::UNICODE: return "~(" + operands[0].to_string() + ")";
+                case Statement::MATH_JAX: case Statement::TEX: return "\\sim (" + operands[0].to_string() + ")";
             }
         }
-        case AND: {
+        case Statement::AND: {
             switch (format) {
-                case ASCII:
+                case Statement::ASCII:
                     return "(" + operands[0].to_string() + ")^(" + operands[1].to_string() + ")";
-                case UNICODE:
+                case Statement::UNICODE:
                     return "(" + operands[0].to_string() + ")∧(" + operands[1].to_string() + ")";
-                case MATH_JAX: case TEX:
+                case Statement::MATH_JAX: case Statement::TEX:
                     return "(" + operands[0].to_string() + ") \\land (" + operands[1].to_string() + ")";
             }
 
                   
         }
-        case OR:  {
+        case Statement::OR:  {
             switch (format) {
-                case ASCII:
+                case Statement::ASCII:
                     return "(" + operands[0].to_string() + ")v(" + operands[1].to_string() + ")";
-                case UNICODE:
+                case Statement::UNICODE:
                     return "(" + operands[0].to_string() + ")∨(" + operands[1].to_string() + ")";
-                case MATH_JAX: case TEX:
+                case Statement::MATH_JAX: case Statement::TEX:
                     return "(" + operands[0].to_string() + ") \\lor (" + operands[1].to_string() + ")";
             }
         }
-        case IFT: {
+        case Statement::IFT: {
             switch (format) {
-                case ASCII:
+                case Statement::ASCII:
                     return "(" + operands[0].to_string() + ")->(" + operands[1].to_string() + ")";
-                case UNICODE:
+                case Statement::UNICODE:
                     return "(" + operands[0].to_string() + ")→(" + operands[1].to_string() + ")";
-                case MATH_JAX: case TEX:
+                case Statement::MATH_JAX: case Statement::TEX:
                     return "(" + operands[0].to_string() + ") \\to (" + operands[1].to_string() + ")";
             }
 
         }
-        case IFF: {
+        case Statement::IFF: {
             switch (format) {
-                case ASCII:
+                case Statement::ASCII:
                     return "(" + operands[0].to_string() + ")<->(" + operands[1].to_string() + ")";
-                case UNICODE:
+                case Statement::UNICODE:
                     return "(" + operands[0].to_string() + ")↔(" + operands[1].to_string() + ")";
-                case MATH_JAX: case TEX:
+                case Statement::MATH_JAX: case Statement::TEX:
                     return "(" + operands[0].to_string() + ") \\leftrightarrow (" + operands[1].to_string() + ")";
             }
         }
@@ -184,17 +184,17 @@ bool Statement::operator<(const Statement& stm) const {
     return false;
 }
 
-void Statement::transform(const Transformation& t) {
+void Statement::transform(const Statement::Transformation& t) {
     switch (t) {
-        case DeMORGANS: {
-            if (type == AND) {
-                type = OR;
+        case Statement::DeMORGANS: {
+            if (type == Statement::AND) {
+                type = Statement::OR;
                 operands[0].transform(t);
                 operands[0] = -operands[0];
                 operands[1].transform(t);
                 operands[1] = -operands[1];
-            } else if (type == OR) {
-                type = AND;
+            } else if (type == Statement::OR) {
+                type = Statement::AND;
                 operands[0].transform(t);
                 operands[0] = -operands[0];
                 operands[1].transform(t);
@@ -205,11 +205,11 @@ void Statement::transform(const Transformation& t) {
             }
             break;
         }
-        case CANCEL_NOTS: {
-            if (type == NOT && operands[0].type == NOT) {
+        case Statement::CANCEL_NOTS: {
+            if (type == Statement::NOT && operands[0].type == Statement::NOT) {
                 operands[0].operands[0].transform(t);
                 type = operands[0].operands[0].type;
-                if (type == VAR) {
+                if (type == Statement::VAR) {
                     var = operands[0].operands[0].var;
                 } else {
                     operands = operands[0].operands[0].operands;
@@ -225,22 +225,22 @@ void Statement::transform(const Transformation& t) {
 
 Statement Statement::operator-() const {
     std::vector<Statement> v = {type == VAR ? Statement(var) : Statement(type,operands)};
-    return Statement(NOT, v);
+    return Statement(Statement::NOT, v);
 }
 
 Statement Statement::operator*(const Statement& stm) const {
     std::vector<Statement> v = {type == VAR ? Statement(var) : Statement(type,operands),stm};
-    return Statement(AND, v);
+    return Statement(Statement::AND, v);
 }
 
 Statement Statement::operator+(const Statement& stm) const {
     std::vector<Statement> v = {type == VAR ? Statement(var) : Statement(type,operands),stm};
-    return Statement(OR, v);
+    return Statement(Statement::OR, v);
 }
 
 bool Statement::evaluate(const std::map<char,bool>& vals) const {
     switch (type) {
-        case VAR: {
+        case Statement::VAR: {
             try {
                 return vals.at(var);
             } catch (const std::out_of_range& e) {
@@ -248,11 +248,11 @@ bool Statement::evaluate(const std::map<char,bool>& vals) const {
                 throw e;
             }
         }
-        case NOT: return !operands[0].evaluate(vals);
-        case AND: return operands[0].evaluate(vals) && operands[1].evaluate(vals);
-        case OR:  return operands[0].evaluate(vals) || operands[1].evaluate(vals);
-        case IFT: return !operands[0].evaluate(vals) || operands[1].evaluate(vals);
-        case IFF: return operands[0].evaluate(vals) == operands[1].evaluate(vals);
+        case Statement::NOT: return !operands[0].evaluate(vals);
+        case Statement::AND: return operands[0].evaluate(vals) && operands[1].evaluate(vals);
+        case Statement::OR:  return operands[0].evaluate(vals) || operands[1].evaluate(vals);
+        case Statement::IFT: return !operands[0].evaluate(vals) || operands[1].evaluate(vals);
+        case Statement::IFF: return operands[0].evaluate(vals) == operands[1].evaluate(vals);
     }
     std::cout << "Statement::evaluate: Unexpected type: " << type << std::endl;
     return 1;
@@ -291,29 +291,29 @@ Statement parse_vector(std::vector<std::string> vec) {
         return Statement(vec[0][0]);
     } else if (!vec[0].compare("~")) {
         args.push_back(parse_vector(find_operands(vec[2],0)));
-        return Statement(NOT, args);
+        return Statement(Statement::NOT, args);
     } else if (!vec[0].compare("AND") ||
                !vec[0].compare("&") ||
                !vec[0].compare("^")) {
         args.push_back(parse_vector(find_operands(vec[1],0)));
         args.push_back(parse_vector(find_operands(vec[2],0)));
-        return Statement(AND, args);
+        return Statement(Statement::AND, args);
     } else if (!vec[0].compare("OR") ||
                !vec[0].compare("V") ||
                !vec[0].compare("v") ||
                !vec[0].compare("&&")) {
         args.push_back(parse_vector(find_operands(vec[1],0)));
         args.push_back(parse_vector(find_operands(vec[2],0)));
-        return Statement(OR, args);
+        return Statement(Statement::OR, args);
     } else if (!vec[0].compare("->")) {
         args.push_back(parse_vector(find_operands(vec[1],0)));
         args.push_back(parse_vector(find_operands(vec[2],0)));
-        return Statement(IFT, args);
+        return Statement(Statement::IFT, args);
     } else if (!vec[0].compare("IFF") ||
                !vec[0].compare("<->")) {
         args.push_back(parse_vector(find_operands(vec[1],0)));
         args.push_back(parse_vector(find_operands(vec[2],0)));
-        return Statement(IFF, args);
+        return Statement(Statement::IFF, args);
     }
     std::cout << "Encountered unexpected token \"" << vec[0] << "\"\n";
     return Statement('x');

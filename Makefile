@@ -1,19 +1,24 @@
 default: main
 
-main: main.cpp validate.o statement.o
-	g++ -std=c++11 main.cpp validate.o statement.o -o logicians-main
+STD ?= c++17
+
+main: main.cpp validate.o statement.o table.o
+	g++ -std=$(STD) main.cpp validate.o statement.o table.o -o logicians-main
 
 repl: repl.cpp validate.o statement.o
 	g++ -std=c++11 repl.cpp validate.o statement.o -o ldsl
 
 tests_debug: tests.cpp validate.o statement.o
-	g++ -std=c++11 tests.cpp statement.o validate.o -o tests -DDEBUG_VALIDATE
+	g++ -std=$(STD) tests.cpp statement.o validate.o -o tests -DDEBUG_VALIDATE
+
+table.o: table.cpp table.h
+	g++ -std=$(STD) table.cpp -c
 
 tests: tests.cpp validate.o statement.o
-	g++ -std=c++11 tests.cpp statement.o validate.o -o tests
+	g++ -std=$(STD) tests.cpp statement.o validate.o -o tests
 
 statement.o: statement.cpp statement.h validate.o
-	g++ -std=c++11 statement.cpp -c
+	g++ -std=$(STD) statement.cpp -c
 
 validate.o: validate.cpp validate.h
-	g++ -std=c++11 validate.cpp -c
+	g++ -std=$(STD) validate.cpp -c
