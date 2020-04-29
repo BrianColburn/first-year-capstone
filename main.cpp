@@ -366,8 +366,8 @@ int main(int argc, char* argv[])
 
         // Build the statement from the remaining arguments.
         // Kinda sketchy, but it enables handling both of these:
-        // ./ldsl file txt "p -> q"
-        // ./ldsl file txt p -> q
+        // ./ldsl file txt "p AND q"
+        // ./ldsl file txt p AND q
         for (int i = 4; i < args.size(); i++)
             expr += args[i];
 
