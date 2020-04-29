@@ -314,6 +314,32 @@ void ReplEnvironment::evaluate_sexpr(const std::string& to_eval, int start, int 
             std::cout << "Invalid number of arguments for \"transform\"\n"
                       << "Expected at least 2, recieved " << args.size() << std::endl;
         }
+    } else if (cmd == "help") {
+        std::cout << "Available commands:\n"
+                  << "(help): print this message\n"
+                  << "(exit): return to the menu\n"
+                  << "\n"
+                  << "(stm STATEMENT): parse a statement\n"
+                  << "  Example: (stm p^q) -> (p)^(q)\n"
+                  << "\n"
+                  << "(defvar $VARNAME STATEMENT): assign a statement to a variable\n"
+                  << "  Example: (defvar $a (stm p^q)) -> (p)^(q)\n"
+                  << "           (defvar $b $a) -> (p)^(q)\n"
+                  << "           (defvar $c (stm $av~$b)) -> ((p)^(q))v(~((p)^(q)))\n"
+                  << "\n"
+                  << "(with-vals VALS STATEMENT): evaluate a statement\n"
+                  << "  Example: (with-vals pTqT (stm p^q)) -> T, (~(t))v(t)\n"
+                  << "           (with-vals ptqf (stm p^q)) -> F, (~(f))^(f)\n"
+                  << "           (with-vals pfqf $c) -> T, (~(t))v(t)\n"
+                  << "\n"
+                  << "(table FILE FORMAT STATEMENT): create a truth table\n"
+                  << "  Example: (table - txt (stm p^q)) -> displays a truth table, (p)^(q)\n"
+                  << "           (table file.html html $a) -> outputs to file.html, (p)^(q)\n"
+                  << "\n"
+                  << "(transform TRANSFORMATIONS... STATEMENT): apply transformations to a statement\n"
+                  << "  Example: (transform demorgans cancelnots (stm ~(p^q))) -> (~(p))v(~(q))\n"
+                  << "           (transform demorgans cancelnots (stm ~pv~q)) -> ~((p)^(q))\n"
+                  << "           (transform cancelnots (transform demorgans (stm ~(pvq)))) -> ~p^~q\n";
     } else {
         std::cout << "Invalid command \"" << cmd << "\"\n";
     }
@@ -361,83 +387,83 @@ void ReplEnvironment::print() const {
 }
 
 
-int main(int argc, char* argv[]) {
-    std::map<std::string, std::string> flags;
-    std::vector<std::string> args(&argv[0], &argv[argc]);
+// int main(int argc, char* argv[]) {
+//     std::map<std::string, std::string> flags;
+//     std::vector<std::string> args(&argv[0], &argv[argc]);
 
-    //std::cout << argc << std::endl;
-    for (auto ptr = args.begin(); ptr != args.end(); ptr++) {
-        //std::cout << *ptr << std::endl;
-        std::string arg = *ptr;
-        if (arg[0] == '-' && arg[1] == '-') {
-            if (arg.find("=") == std::string::npos) {
-                flags[arg] = "true";
-            } else {
-                int epos = arg.find("=");
-                flags[arg.substr(0,epos)] = arg.substr(epos+1);
-            }
-            args.erase(ptr);
-            ptr--;
-        }
-    }
+//     //std::cout << argc << std::endl;
+//     for (auto ptr = args.begin(); ptr != args.end(); ptr++) {
+//         //std::cout << *ptr << std::endl;
+//         std::string arg = *ptr;
+//         if (arg[0] == '-' && arg[1] == '-') {
+//             if (arg.find("=") == std::string::npos) {
+//                 flags[arg] = "true";
+//             } else {
+//                 int epos = arg.find("=");
+//                 flags[arg.substr(0,epos)] = arg.substr(epos+1);
+//             }
+//             args.erase(ptr);
+//             ptr--;
+//         }
+//     }
 
-    /*for (auto f : flags)
-        std::cout << "Flag: " << f.first << "=" << f.second << std::endl;
-    for (auto a : args)
-        std::cout << "Arg: " << a << std::endl;*/
+//     /*for (auto f : flags)
+//         std::cout << "Flag: " << f.first << "=" << f.second << std::endl;
+//     for (auto a : args)
+//         std::cout << "Arg: " << a << std::endl;*/
 
-    if (flags["--c"] == "true") {
-        ReplEnvironment renv(flags);
+//     if (flags["--c"] == "true") {
+//         ReplEnvironment renv(flags);
 
-        std::string expr;
+//         std::string expr;
 
-        for (int i = 1; i < args.size(); i++)
-            expr += args[i];
-        renv.evaluate(expr);
-        renv.print();
+//         for (int i = 1; i < args.size(); i++)
+//             expr += args[i];
+//         renv.evaluate(expr);
+//         renv.print();
 
-    } else if (args.size() == 1) {
-        ReplEnvironment renv(flags);
+//     } else if (args.size() == 1) {
+//         ReplEnvironment renv(flags);
 
-        std::string banner = "    __               _      _                 _    ____                        _     \n"
-                             "   / /  ____  ____ _(_)____(_)___ _____  ____( )  / __ \\____  ____ ___  ____ _(_)___ \n"
-                             "  / /  / __ \\/ __ `/ / ___/ / __ `/ __ \\/ ___//  / / / / __ \\/ __ `__ \\/ __ `/ / __ \\\n"
-                             " / /__/ /_/ / /_/ / / /__/ / /_/ / / / (__  )   / /_/ / /_/ / / / / / / /_/ / / / / /\n"
-                             "/_____|____/\\__, /_/\\___/_/\\__,_/_/ /_/____/   /_____/\\____/_/ /_/ /_/\\__,_/_/_/ /_/ \n"
-                             "   _____   /____/        _ _____         __                                          \n"
-                             "  / ___/____  ___  _____(_) __(_)____   / /  ____ _____  ____ ___  ______ _____ ____ \n"
-                             "  \\__ \\/ __ \\/ _ \\/ ___/ / /_/ / ___/  / /  / __ `/ __ \\/ __ `/ / / / __ `/ __ `/ _ \\\n"
-                             " ___/ / /_/ /  __/ /__/ / __/ / /__   / /__/ /_/ / / / / /_/ / /_/ / /_/ / /_/ /  __/\n"
-                             "/____/ .___/\\___/\\___/_/_/ /_/\\___/  /_____|__,_/_/ /_/\\__, /\\__,_/\\__,_/\\__, /\\___/ \n"
-                             "    /_/                                               /____/            /____/       \n"
-                             "Brought to you by Greenspun's Tenth Rule\n\n";
-        std::cout << banner;
+//         std::string banner = "    __               _      _                 _    ____                        _     \n"
+//                              "   / /  ____  ____ _(_)____(_)___ _____  ____( )  / __ \\____  ____ ___  ____ _(_)___ \n"
+//                              "  / /  / __ \\/ __ `/ / ___/ / __ `/ __ \\/ ___//  / / / / __ \\/ __ `__ \\/ __ `/ / __ \\\n"
+//                              " / /__/ /_/ / /_/ / / /__/ / /_/ / / / (__  )   / /_/ / /_/ / / / / / / /_/ / / / / /\n"
+//                              "/_____|____/\\__, /_/\\___/_/\\__,_/_/ /_/____/   /_____/\\____/_/ /_/ /_/\\__,_/_/_/ /_/ \n"
+//                              "   _____   /____/        _ _____         __                                          \n"
+//                              "  / ___/____  ___  _____(_) __(_)____   / /  ____ _____  ____ ___  ______ _____ ____ \n"
+//                              "  \\__ \\/ __ \\/ _ \\/ ___/ / /_/ / ___/  / /  / __ `/ __ \\/ __ `/ / / / __ `/ __ `/ _ \\\n"
+//                              " ___/ / /_/ /  __/ /__/ / __/ / /__   / /__/ /_/ / / / / /_/ / /_/ / /_/ / /_/ /  __/\n"
+//                              "/____/ .___/\\___/\\___/_/_/ /_/\\___/  /_____|__,_/_/ /_/\\__, /\\__,_/\\__,_/\\__, /\\___/ \n"
+//                              "    /_/                                               /____/            /____/       \n"
+//                              "Brought to you by Greenspun's Tenth Rule\n\n";
+//         std::cout << banner;
 
-        while (renv.loop) {
-            renv.evaluate(renv.read());
-            if (renv.loop)
-                renv.print();
-        }
-    } else if (args.size() > 3) {
-        ReplEnvironment renv(flags);
-        std::string filename = args[1];
-        std::string format = args[2];
-        std::string expr = args[3];
+//         while (renv.loop) {
+//             renv.evaluate(renv.read());
+//             if (renv.loop)
+//                 renv.print();
+//         }
+//     } else if (args.size() > 3) {
+//         ReplEnvironment renv(flags);
+//         std::string filename = args[1];
+//         std::string format = args[2];
+//         std::string expr = args[3];
 
-        // Build the statement from the remaining arguments.
-        // Kinda sketchy, but it enables handling both of these:
-        // ./ldsl file txt "p -> q"
-        // ./ldsl file txt p -> q
-        for (int i = 4; i < args.size(); i++)
-            expr += args[i];
+//         // Build the statement from the remaining arguments.
+//         // Kinda sketchy, but it enables handling both of these:
+//         // ./ldsl file txt "p -> q"
+//         // ./ldsl file txt p -> q
+//         for (int i = 4; i < args.size(); i++)
+//             expr += args[i];
 
-        std::string sexpr = "(table \"" + filename + "\" " + format + " (stm " + expr + "))";
-        if (flags["--debug"] == "true")
-            std::cout << "s-expression: " << sexpr << std::endl;
+//         std::string sexpr = "(table \"" + filename + "\" " + format + " (stm " + expr + "))";
+//         if (flags["--debug"] == "true")
+//             std::cout << "s-expression: " << sexpr << std::endl;
 
-        renv.evaluate(sexpr);
-    }
+//         renv.evaluate(sexpr);
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
 

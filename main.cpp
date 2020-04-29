@@ -6,6 +6,8 @@
 #include "validate.h"
 #include "statement.h"
 #include "table.h"
+#include "repl.h"
+
 using namespace logicians;
 using namespace std;
 
@@ -243,6 +245,23 @@ void menu_about()
     }
 }
 
+void menu_repl() {
+    map<string,string> dummy_flags;
+    ReplEnvironment renv(dummy_flags);
+
+    std::string banner = "The Logicians' Domain\n"
+                         "    Specific Language\n"
+                         "Brought to you by Greenspun's Tenth Rule\n"
+                         "Enter \"(help)\" for help\n\n";
+    std::cout << banner;
+
+    while (renv.loop) {
+        renv.evaluate(renv.read());
+        if (renv.loop)
+            renv.print();
+    }
+}
+
 struct MenuEntry {
     string text;
     void (* function)();
@@ -299,16 +318,65 @@ bool prompt_menu(vector<MenuEntry> menu)
     return true;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-    vector<MenuEntry> menu;
+    map<string, string> flags;
+    vector<string> args(&argv[0], &argv[argc]);
 
-    menu.push_back({"Create a Truth Table", menu_export_table_macro});
-    menu.push_back({"Transform an Expression", menu_transform});
-    menu.push_back({"Help", menu_help});
-    menu.push_back({"About", menu_about});
+    for (auto ptr = args.begin(); ptr != args.end(); ptr++) {
+      std::string arg = *ptr;
+      if (arg[0] == '-' && arg[1] == '-') {
+        if (arg.find("=") == std::string::npos) {
+          flags[arg] = "true";
+        } else {
+          int epos = arg.find("=");
+          flags[arg.substr(0,epos)] = arg.substr(epos+1);
+        }
+        args.erase(ptr);
+        ptr--;
+      }
+    }
+    if (flags["--c"] == "true") {
+        ReplEnvironment renv(flags);
 
-    while (prompt_menu(menu));
+        std::string expr;
+
+        for (int i = 1; i < args.size(); i++)
+            expr += args[i];
+        renv.evaluate(expr);
+        renv.print();
+
+    } else if (args.size() == 1) {
+        vector<MenuEntry> menu;
+
+        menu.push_back({"Create a Truth Table", menu_export_table_macro});
+        menu.push_back({"Transform an Expression", menu_transform});
+        menu.push_back({"REPL", menu_repl});
+        menu.push_back({"Help", menu_help});
+        menu.push_back({"About", menu_about});
+
+        while (prompt_menu(menu));
+
+
+    } else if (args.size() > 3) {
+        ReplEnvironment renv(flags);
+        std::string filename = args[1];
+        std::string format = args[2];
+        std::string expr = args[3];
+
+        // Build the statement from the remaining arguments.
+        // Kinda sketchy, but it enables handling both of these:
+        // ./ldsl file txt "p -> q"
+        // ./ldsl file txt p -> q
+        for (int i = 4; i < args.size(); i++)
+            expr += args[i];
+
+        std::string sexpr = "(table \"" + filename + "\" " + format + " (stm " + expr + "))";
+        if (flags["--debug"] == "true")
+            std::cout << "s-expression: " << sexpr << std::endl;
+
+        renv.evaluate(sexpr);
+    }
 
     return 0;
 }
