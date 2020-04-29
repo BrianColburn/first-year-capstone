@@ -45,7 +45,7 @@ int find_close_paren(const std::string& str, int i) {
         acc++;
         i++;
         // While we haven't encountered the closing parentheses,
-        while (acc) {
+        while (acc && i < str.size()) {
             length++; // increment the length,
 
             // and adjust nesting depth as needed.
@@ -56,7 +56,7 @@ int find_close_paren(const std::string& str, int i) {
             }
             i++;
         }
-        return length;
+        return acc ? -1 : length;
     }
 }
 
@@ -69,7 +69,7 @@ int find_open_paren(const std::string& str, int i) {
         acc++;
         i--;
         // While we haven't found the opening parentheses,
-        while (acc) {
+        while (acc && i >= 0) {
             length++; // increment the length,
 
             // and adjust nesting depth as needed.
@@ -81,7 +81,7 @@ int find_open_paren(const std::string& str, int i) {
 
             i--;
         }
-        return length;
+        return acc ? -1 : length;
     }
 }
 
@@ -276,6 +276,13 @@ bool is_valid_statement(const std::string& stm) {
                 }
             }
             i++;
+        }
+
+        if (expecting == OPERATOR) {
+            // We good
+        } else {
+            is_valid = false;
+            display_err("expected OPERAND for operator", stm, i);
         }
     } else {
         std::cout << "Encountered unexpected nothingness at all positions";

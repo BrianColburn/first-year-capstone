@@ -45,7 +45,6 @@ std::string Statement::to_string(const StringType& format) const {
                     return "(" + operands[0].to_string() + ") \\land (" + operands[1].to_string() + ")";
             }
 
-                  
         }
         case Statement::OR:  {
             switch (format) {
@@ -188,17 +187,25 @@ void Statement::transform(const Statement::Transformation& t) {
     switch (t) {
         case Statement::DeMORGANS: {
             if (type == Statement::AND) {
-                type = Statement::OR;
                 operands[0].transform(t);
                 operands[0] = -operands[0];
                 operands[1].transform(t);
                 operands[1] = -operands[1];
+
+                std::vector<Statement> newOperands = operands;
+                Statement newOperand = Statement(Statement::OR, newOperands);
+
+                *this = -newOperand;
             } else if (type == Statement::OR) {
-                type = Statement::AND;
                 operands[0].transform(t);
                 operands[0] = -operands[0];
                 operands[1].transform(t);
                 operands[1] = -operands[1];
+
+                std::vector<Statement> newOperands = operands;
+                Statement newOperand = Statement(Statement::AND, newOperands);
+
+                *this = -newOperand;
             } else {
                 for (Statement& s : operands)
                     s.transform(t);

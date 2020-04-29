@@ -10,6 +10,10 @@ namespace logicians
 {
 
 /** This function outputs a table to a `std::ostream`.
+ * @param os the output stream to write to
+ * @param tfmt the format of the table
+ * @param stm the statement to analyse
+ * @param sfmt the format of the statement
  */
 void export_table(std::ostream& os, const TableFormat tfmt, const Statement& stm, const Statement::StringType sfmt)
 {
