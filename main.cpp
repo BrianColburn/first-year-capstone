@@ -34,7 +34,7 @@ Statement prompt_expression() {
 #if (__cplusplus >= 201703L)
     #include <filesystem>
 
-    void export_table_macro() {
+    void menu_export_table_macro() {
         Statement stm = prompt_expression();
         TableFormat table_fmt;
         string tmp_string;
@@ -84,7 +84,7 @@ Statement prompt_expression() {
 
 #elif (__cplusplus >= 201103L)
 
-    void export_table_macro() {
+    void menu_export_table_macro() {
         Statement stm = prompt_expression();
         TableFormat table_fmt;
         string tmp_string;
@@ -122,7 +122,7 @@ Statement prompt_expression() {
             if (fout.is_open()) {
                 export_table(fout, table_fmt, stm, Statement::ASCII);
                 fout.close();
-                cout << "The table was saved to \"" << filename << "\""
+                cout << "The table was saved to \"" << filename << "\"\n"
                      << "press enter to return to the menu...";
                 getline(cin, tmp_string);
             }
@@ -137,151 +137,178 @@ Statement prompt_expression() {
 
 #endif
 
-const string MENU = "1) Create a Truth Table\n"
-                    "2) Transform an Expression\n"
-                    "3) Help\n"
-                    "4) About\n"
-                    "5) Exit\n";
 
-
-bool prompt_menu()
+void menu_transform()
 {
+    Statement stm = prompt_expression();
     string choice;
 
-    cout << "What would you like to do?" << endl
-         << MENU
-         << ">> ";
-    cin>>choice;
-    while (choice != "1" &&
-           choice != "2" &&
-           choice != "3" &&
-           choice != "4" &&
-           choice != "5")
-    {
-        cout << "Invalid choice. Please try again." << endl
-             << MENU
-             << ">> ";
-        cin >> choice;
-    }
-    cin.ignore();
+    do {
+      cout << "Expression is currently: \"" << stm.to_string() << "\"\n";
+      cout << "Please select from the following:\n"
+          << "1. Apply DeMorgan's Laws\n"
+          << "2. Cancel Double Negatives\n"
+          << "0. Exit\n"
+          << ">> ";
+      getline(cin, choice);
+      switch(choice[0]) {
+          case '0': break;
+          case '1': stm.transform(Statement::DeMORGANS); break;
+          case '2': stm.transform(Statement::CANCEL_NOTS); break;
+          default : cout << "Invalid choice\n";
+      }
+    } while (choice[0] != '0');
+}
 
-    if (choice=="1")
-    {
-        export_table_macro();
-    }
 
-    else if (choice == "2")
-    {
-
-        Statement stm = prompt_expression();
-
-        do {
-            cout << "Please select from the following:\n"
-                 << "1. Apply DeMorgan's Laws\n"
-                 << "2. Cancel Double Negatives\n"
-                 << "0. Exit\n"
-                 << ">> ";
+void menu_help()
+{
+    string choice;
+    cout << "Logical expressions can be entered according to the following rules:\n"
+                << "  A variable is any lowercase letter except 'v'\n"
+                << "  Negation is denoted with '~', the tilde character\n"
+                << "  Conjunction is denoted as \"p OP q\",\n"
+                << "    where 'p' and 'q' are logical expressions,\n"
+                << "    and \"OP\" is one of {\"AND\", '^', '&'}\n"
+                << "  Disjunction is denoted as \"p OP q\",\n"
+                << "    where 'p' and 'q' are logical expressions,\n"
+                << "    and \"OP\" is one of {\"OR\", 'V', 'v', \"&&\"}\n"
+                << "  Implication is denoted as \"p -> q\"\n"
+                << "    where 'p' and 'q' are logical expressions,\n"
+                << "  Equivalence is denoted as \"p OP q\",\n"
+                << "    where 'p' and 'q' are logical expressions,\n"
+                << "    and \"OP\" is one of {\"IFF\", \"<->\"}\n"
+                << "\n"
+                << "Expressions can be nested using parentheses.\n"
+                << "Examples:\n"
+                << "  p AND q\n"
+                << "  pANDq\n"
+                << "  (p)AND(q)\n"
+                << "  p^q v r -> s <-> s v ~(r v q^p)\n"
+                << "\n"
+                << "press enter to return to the menu...";
             getline(cin, choice);
-            switch(choice[0]) {
-                case '0': break;
-                case '1': stm.transform(Statement::DeMORGANS); break;
-                case '2': stm.transform(Statement::CANCEL_NOTS); break;
-                default : cout << "Invalid choice\n";
-            }
-            if (choice[0] != '0')
-                cout << "Expression is currently: \"" << stm.to_string() << "\"\n";
-        } while (choice[0] != '0');
-    }
+}
 
-    else if (choice == "3")
+
+void menu_about()
+{
+    string choice;
+    cout << "This program was commissioned by Dr. Matt Tedrow of Texas A&M University - Corpus Christi.\n"
+         << "\n"
+         << "The following students fulfilled the commission, as their First-Year Capstone Project, under the supervision of Dr. Rita Sperry.\n"
+         << "Brandon Garcia\n"
+         << "Brian Colburn\n"
+         << "Mark Thompson\n"
+         << "Xavier Linares\n"
+         << "\n"
+         << "\n"
+         << "This application is copyrighted under the MIT license and the source code can be found on GitHub at\n"
+         << "  https://github.com/BrianColburn/first-year-capstone\n"
+         << "This particular binary was compiled to the C++ " << __cplusplus << " standard\n"
+         << "\n"
+         << "Enter 'L' to view the full license,\n"
+         << "  anything else will take you to the menu.\n"
+         << ">> ";
+    getline(cin, choice);
+
+    // Ta-Da! Users don't need to keep track of a LICENSE file.
+    if ((choice[0] & 95) == 'L')
     {
-        cout << "Logical expressions can be entered according to the following rules:\n"
-             << "  A variable is any lowercase letter except 'v'\n"
-             << "  Negation is denoted with '~', the tilde character\n"
-             << "  Conjunction is denoted as \"p OP q\",\n"
-             << "    where 'p' and 'q' are logical expressions,\n"
-             << "    and \"OP\" is one of {\"AND\", '^', '&'}\n"
-             << "  Disjunction is denoted as \"p OP q\",\n"
-             << "    where 'p' and 'q' are logical expressions,\n"
-             << "    and \"OP\" is one of {\"OR\", 'V', 'v', \"&&\"}\n"
-             << "  Implication is denoted as \"p -> q\"\n"
-             << "    where 'p' and 'q' are logical expressions,\n"
-             << "  Equivalence is denoted as \"p OP q\",\n"
-             << "    where 'p' and 'q' are logical expressions,\n"
-             << "    and \"OP\" is one of {\"IFF\", \"<->\"}\n"
+        cout << ""
+             << "MIT License"
              << "\n"
-             << "Expressions can be nested using parentheses.\n"
-             << "Examples:\n"
-             << "  p AND q\n"
-             << "  pANDq\n"
-             << "  (p)AND(q)\n"
-             << "  p^q v r -> s <-> s v ~(r v q^p)\n"
+             << "Copyright (c) 2020 The Logicians: Brandon Garcia, Brian Colburn, Mark Thompson, Xavier Linares\n"
+             << "\n"
+             << "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
+             << "of this software and associated documentation files (the \"Software\"), to deal\n"
+             << "in the Software without restriction, including without limitation the rights\n"
+             << "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
+             << "copies of the Software, and to permit persons to whom the Software is\n"
+             << "furnished to do so, subject to the following conditions:\n"
+             << "\n"
+             << "The above copyright notice and this permission notice shall be included in all\n"
+             << "copies or substantial portions of the Software.\n"
+             << "\n"
+             << "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
+             << "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"
+             << "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"
+             << "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
+             << "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
+             << "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"
+             << "SOFTWARE.\n"
              << "\n"
              << "press enter to return to the menu...";
         getline(cin, choice);
     }
+}
 
-    else if (choice == "4")
-    {
-        cout << "This program was commissioned by Dr. Matt Tedrow of Texas A&M University - Corpus Christi.\n"
-             << "\n"
-             << "The following students fulfilled the commission, as their First-Year Capstone Project, under the supervision of Dr. Rita Sperry.\n"
-             << "Brandon Garcia\n"
-             << "Brian Colburn\n"
-             << "Mark Thompson\n"
-             << "Xavier Linares\n"
-             << "\n"
-             << "\n"
-             << "This application is copyrighted under the MIT license and the source code can be found on GitHub at\n"
-             << "  https://github.com/BrianColburn/first-year-capstone\n"
-             << "This particular binary was compiled to the C++ " << __cplusplus << " standard\n"
-             << "\n"
-             << "Enter 'L' to view the full license,\n"
-             << "  anything else will take you to the menu.\n"
-             << ">> ";
+struct MenuEntry {
+    string text;
+    void (* function)();
+};
+
+
+bool prompt_menu(vector<MenuEntry> menu)
+{
+    string choice;
+    int ichoice;
+    bool valid_choice = true;
+
+    do {
+        if (!valid_choice)
+        {
+            cout << "Invalid choice \"" << choice << "\"\n"
+                 << "Please select from below:\n";
+        }
+        for (int i = 0; i < menu.size(); i++)
+        {
+            cout << (i+1) << ") " << menu[i].text << endl;
+        }
+
+        cout << (menu.size()+1) << ") Exit\n\n"
+            << ">> ";
         getline(cin, choice);
 
-        // Ta-Da! Users don't need to keep track of a LICENSE file.
-        if ((choice[0] & 95) == 'L')
+        if (cin.eof())
         {
-            cout << ""
-                 << "MIT License"
-                 << "\n"
-                 << "Copyright (c) 2020 The Logicians: Brandon Garcia, Brian Colburn, Mark Thompson, Xavier Linares\n"
-                 << "\n"
-                 << "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
-                 << "of this software and associated documentation files (the \"Software\"), to deal\n"
-                 << "in the Software without restriction, including without limitation the rights\n"
-                 << "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
-                 << "copies of the Software, and to permit persons to whom the Software is\n"
-                 << "furnished to do so, subject to the following conditions:\n"
-                 << "\n"
-                 << "The above copyright notice and this permission notice shall be included in all\n"
-                 << "copies or substantial portions of the Software.\n"
-                 << "\n"
-                 << "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
-                 << "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"
-                 << "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"
-                 << "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
-                 << "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
-                 << "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"
-                 << "SOFTWARE.\n"
-                 << "\n"
-                 << "press enter to return to the menu...";
-            getline(cin, choice);
+            cout << endl;
+            return false;
         }
-    }
 
-    else if (choice == "5")
+        if (choice.find_first_not_of("0123456789") == string::npos)
+        {
+            ichoice = stoi(choice)-1;
+
+            valid_choice = 0 <= ichoice && ichoice <= menu.size();
+        } else
+        {
+            valid_choice = false;
+        }
+
+    } while (!valid_choice);
+
+    if (ichoice == menu.size())
+    {
         return false;
-
+    } else
+    {
+        menu[ichoice].function();
+    }
 
     return true;
 }
 
 int main()
 {
-    while (prompt_menu());
+    vector<MenuEntry> menu;
+
+    menu.push_back({"Create a Truth Table", menu_export_table_macro});
+    menu.push_back({"Transform an Expression", menu_transform});
+    menu.push_back({"Help", menu_help});
+    menu.push_back({"About", menu_about});
+
+    while (prompt_menu(menu));
 
     return 0;
 }
