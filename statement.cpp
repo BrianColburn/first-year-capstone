@@ -377,8 +377,11 @@ std::string add_parentheses(std::string stm) {
             i+=5; // inserting the '(' and ')' shifted us 2, add another 3 to get past the "<->".
             stm.insert(i, "(");
             j = i+1;
-            while (stm[j] != ')' && j < stm.size()) {
-                j++;
+            cnt = 1;
+            while (cnt > 0 && j < stm.size()) {
+                if (stm[j] == ')') cnt--;
+                else if (stm[j] == '(') cnt++;
+                if (cnt > 0) j++;
             }
             stm.insert(j, ")");
         }
